@@ -8,7 +8,7 @@ export const SupplierOffers: CollectionConfig = {
   labels: { singular: "Offre fournisseur", plural: "Offres fournisseurs" },
   admin: {
     useAsTitle: "offerReference",
-    defaultColumns: ["offerReference", "supplier", "productName", "unitPrice", "currency", "quoteStatus"],
+    defaultColumns: ["offerReference", "supplier", "productName", "unitPrice", "currency", "minimumOrderQuantity", "chinaDomesticShipping", "comparisonTotal", "validUntil", "quoteStatus"],
     group: "Approvisionnement",
     description: "Historique des prix et conditions reçus des fournisseurs.",
   },
@@ -44,6 +44,8 @@ export const SupplierOffers: CollectionConfig = {
     },
     { name: "minimumOrderQuantity", type: "number", min: 1, defaultValue: 1, label: "Quantité minimale (MOQ)" },
     { name: "availableQuantity", type: "number", min: 0, label: "Quantité disponible annoncée" },
+    { name: "requestedQuantity", type: "number", min: 1, label: "Quantité retenue pour comparer les offres" },
+    { name: "comparisonTotal", type: "number", admin: { readOnly: true }, label: "Total comparatif (produits + transport Chine)" },
     { name: "unitWeightKg", type: "number", min: 0, label: "Poids unitaire (kg)" },
     { name: "unitLengthCm", type: "number", min: 0, label: "Longueur unitaire (cm)" },
     { name: "unitWidthCm", type: "number", min: 0, label: "Largeur unitaire (cm)" },
@@ -75,6 +77,11 @@ export const SupplierOffers: CollectionConfig = {
         if (!data) return data;
         const supplierValue = data.supplier ?? originalDoc?.supplier;
         const supplierId = typeof supplierValue === "object" && supplierValue ? supplierValue.id : supplierValue;
+        const quantity = typeof data.requestedQuantity === "number" ? data.requestedQuantity : (typeof originalDoc?.requestedQuantity === "number" ? originalDoc.requestedQuantity : Number(data.minimumOrderQuantity ?? originalDoc?.minimumOrderQuantity ?? 1));
+        const shipping = typeof data.chinaDomesticShipping === "number" ? data.chinaDomesticShipping : Number(originalDoc?.chinaDomesticShipping ?? 0);
+        if (Number.isFinite(quantity) && quantity > 0 && Number.isFinite(price) && Number.isFinite(shipping) && shipping >= 0) {
+          data.comparisonTotal = Math.round((price * quantity + shipping) * 100) / 100;
+        }
         const status = data.quoteStatus ?? originalDoc?.quoteStatus;
         const price = typeof data.unitPrice === "number" ? data.unitPrice : originalDoc?.unitPrice;
         const moq = typeof data.minimumOrderQuantity === "number" ? data.minimumOrderQuantity : originalDoc?.minimumOrderQuantity;
