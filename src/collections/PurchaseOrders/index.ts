@@ -77,8 +77,6 @@ export const PurchaseOrders: CollectionConfig = {
     { name: "chinaDomesticShipping", type: "number", min: 0, defaultValue: 0, label: "Transport intérieur Chine" },
     { name: "otherSupplierCharges", type: "number", min: 0, defaultValue: 0, label: "Autres frais facturés par le fournisseur" },
     { name: "totalAmount", type: "number", admin: { readOnly: true }, label: "Total du bon de commande" },
-    { name: "paidAmount", type: "number", admin: { readOnly: true }, label: "Total payé au fournisseur" },
-    { name: "outstandingAmount", type: "number", admin: { readOnly: true }, label: "Solde fournisseur restant" },
     { name: "paymentStatus", type: "select", defaultValue: "unpaid", options: [
       { label: "Non payé", value: "unpaid" },
       { label: "Partiellement payé", value: "partially_paid" },
@@ -255,6 +253,17 @@ export const PurchaseOrders: CollectionConfig = {
 
         const status = data.status ?? originalDoc?.status;
         const previousStatus = originalDoc?.status ?? "draft";
+        if (status === "approved" && previousStatus !== "approved") {
+          const supplierValue = data.supplier ?? originalDoc?.supplier;
+          const supplierId = typeof supplierValue === "object" && supplierValue ? supplierValue.id : supplierValue;
+          if (!supplierId) throw new Error("Un fournisseur doit être sélectionné avant validation du bon.");
+          const payload = req.payload as any;
+          const supplier = await payload.findByID({ collection: "suppliers", id: supplierId, depth: 0, overrideAccess: true });
+          if (!supplier || supplier.verificationStatus !== "verified") {
+            throw new Error("Le fournisseur doit être vérifié avant la validation du bon de commande.");
+          }
+          if (!offerId) throw new Error("Sélectionnez une offre fournisseur validée avant d'approuver le bon de commande.");
+        }
         if (status !== previousStatus) {
           const allowed: Record<string, string[]> = {
             draft: ["awaiting_approval", "cancelled"],
