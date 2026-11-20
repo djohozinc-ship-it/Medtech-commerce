@@ -192,20 +192,21 @@ export const InboundShipments: CollectionConfig = {
 
         const statusChanged = String(doc.status) !== String(previousDoc?.status ?? "");
         for (const orderId of orderIds) {
-          const existing = await payload.find({
+          const latest = await payload.find({
             collection: "shipment-events",
             where: {
               and: [
                 { inboundShipment: { equals: doc.id } },
                 { order: { equals: orderId } },
-                { status: { equals: mapped } },
               ],
             },
+            sort: "-eventDate",
             limit: 1,
             depth: 0,
             overrideAccess: true,
           });
-          const existingEvent = existing.docs?.[0];
+          const latestEvent = latest.docs?.[0];
+          const existingEvent = latestEvent?.status === mapped ? latestEvent : undefined;
           const eventData = {
             reference: doc.shipmentReference,
             inboundShipment: doc.id,
@@ -216,7 +217,7 @@ export const InboundShipments: CollectionConfig = {
             carrier: doc.freightForwarder || null,
             trackingCode: doc.trackingNumber || null,
             trackingUrl: doc.trackingUrl || null,
-            note: doc.customerUpdate || "",
+            customerMessage: doc.customerUpdate || "",
             visibleToCustomer: true,
           };
           if (existingEvent) {
@@ -236,7 +237,7 @@ export const InboundShipments: CollectionConfig = {
         }
         return doc;
       },
-
+    ],
   },
   timestamps: true,
 };
