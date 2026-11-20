@@ -6,6 +6,7 @@ import { getRevenue } from "@/endpoints/adminDashboard/getRevenue";
 import { getFinanceSummary } from "@/endpoints/adminDashboard/getFinanceSummary";
 import { getFinanceOperations } from "@/endpoints/adminDashboard/getFinanceOperations";
 import { createFedaPayPayment, fedapayReturn, fedapayWebhook, getCustomerOrderBalance } from "@/endpoints/payments/fedapay";
+import { getCustomerShipmentTracking } from "@/endpoints/orders/getCustomerShipmentTracking";
 import { currencyField } from "@/fields/currencyField";
 import { countryList } from "@/globals/(ecommerce)/Couriers/utils/countryList";
 import { courierSelectOptions } from "@/globals/(ecommerce)/Couriers/utils/couriersConfig";
@@ -37,6 +38,11 @@ export const Orders: CollectionConfig = {
     beforeValidate: [generateID],
   },
   endpoints: [
+    {
+      path: "/shipment-tracking",
+      method: "get",
+      handler: getCustomerShipmentTracking,
+    },
     {
       path: "/order-balance",
       method: "get",
