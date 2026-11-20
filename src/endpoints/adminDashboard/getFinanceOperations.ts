@@ -21,7 +21,7 @@ export const getFinanceOperations = async (req: PayloadRequest) => {
   }
 
   try {
-    const [ordersResult, transactionsResult, allocationsResult] = await Promise.all([
+    const [ordersResult, transactionsResult, paymentAllocationsResult, costAllocationsResult] = await Promise.all([
       req.payload.find({
         collection: "orders",
         depth: 0,
@@ -35,7 +35,15 @@ export const getFinanceOperations = async (req: PayloadRequest) => {
         limit: 10000,
         pagination: false,
         where: { status: { equals: "confirmed" } },
-        select: { transactionType: true, amount: true, currency: true, order: true },
+        select: { id: true, transactionType: true, amount: true, currency: true, order: true },
+      }),
+      req.payload.find({
+        collection: "order-payment-allocations",
+        depth: 0,
+        limit: 10000,
+        pagination: false,
+        where: { status: { equals: "confirmed" } },
+        select: { order: true, cashTransaction: true, amountInOrderCurrency: true, currency: true },
       }),
       req.payload.find({
         collection: "order-cost-allocations",
@@ -47,75 +55,124 @@ export const getFinanceOperations = async (req: PayloadRequest) => {
       }),
     ]);
 
+    const confirmedTransactions = new Map<string, RecordValue>();
+    for (const raw of transactionsResult.docs) {
+      const transaction = raw as unknown as RecordValue;
+      const id = relationId(transaction.id);
+      if (id) confirmedTransactions.set(id, transaction);
+    }
+
+    const paidByOrder = new Map<string, number>();
+    const allocationsByOrder = new Set<string>();
+    for (const raw of paymentAllocationsResult.docs) {
+      const allocation = raw as unknown as RecordValue;
+      const orderId = relationId(allocation.order);
+      const transactionId = relationId(allocation.cashTransaction);
+      if (!orderId || !transactionId) continue;
+      const source = confirmedTransactions.get(transactionId);
+      if (!source || source.transactionType !== "customer_payment") continue;
+      if (source.currency !== allocation.currency) continue;
+      const convertedAmount = asAmount(allocation.amountInOrderCurrency);
+      if (convertedAmount <= 0) continue;
+      allocationsByOrder.add(orderId);
+      paidByOrder.set(orderId, (paidByOrder.get(orderId) ?? 0) + convertedAmount);
+    }
+
     let outstandingXOF = 0;
     let outstandingOrders = 0;
-    let foreignCurrencyOrders = 0;
-    const orderIdsWithReceipts = new Set<string>();
+    let excludedForeignCurrencyOrders = 0;
+    let legacyPaymentOrders = 0;
+    const orderRevenueXOF = new Map<string, number>();
+    const orderCostsXOF = new Map<string, number>();
 
     for (const rawOrder of ordersResult.docs) {
       const order = rawOrder as unknown as RecordValue;
+      const orderId = relationId(order.id);
+      if (!orderId) continue;
       const details = asRecord(order.orderDetails);
       const total = asAmount(details.totalWithShipping);
-      const paid = asAmount(details.amountPaid);
       const currency = typeof details.currency === "string" ? details.currency : "UNKNOWN";
-      const due = Math.max(0, total - paid);
-      if (due <= 0) continue;
+      const legacyPaid = asAmount(details.amountPaid);
+      const paid = allocationsByOrder.has(orderId) ? (paidByOrder.get(orderId) ?? 0) : legacyPaid;
+
+      if (!allocationsByOrder.has(orderId) && legacyPaid > 0) legacyPaymentOrders += 1;
+
       if (currency !== "XOF") {
-        foreignCurrencyOrders += 1;
+        excludedForeignCurrencyOrders += 1;
         continue;
       }
-      outstandingXOF += due;
-      outstandingOrders += 1;
+      const due = Math.max(0, total - paid);
+      if (due > 0) {
+        outstandingXOF += due;
+        outstandingOrders += 1;
+      }
+      orderRevenueXOF.set(orderId, Math.max(0, paid));
     }
 
-    let receiptsXOF = 0;
-    let refundsXOF = 0;
-    for (const rawTransaction of transactionsResult.docs) {
-      const transaction = rawTransaction as unknown as RecordValue;
-      const orderId = relationId(transaction.order);
-      if (transaction.currency !== "XOF") continue;
+    let confirmedReceiptsXOF = 0;
+    let confirmedRefundsXOF = 0;
+    let foreignCurrencyReceipts = 0;
+    const receiptsByOrder = new Map<string, number>();
+    for (const raw of transactionsResult.docs) {
+      const transaction = raw as unknown as RecordValue;
+      if (transaction.transactionType !== "customer_payment" && transaction.transactionType !== "customer_refund") continue;
+      if (transaction.currency !== "XOF") {
+        foreignCurrencyReceipts += 1;
+        continue;
+      }
       const amount = asAmount(transaction.amount);
+      const orderId = relationId(transaction.order);
       if (transaction.transactionType === "customer_payment") {
-        receiptsXOF += amount;
-        if (orderId) orderIdsWithReceipts.add(orderId);
-      } else if (transaction.transactionType === "customer_refund") {
-        refundsXOF += amount;
+        confirmedReceiptsXOF += amount;
+        if (orderId) receiptsByOrder.set(orderId, (receiptsByOrder.get(orderId) ?? 0) + amount);
+      } else {
+        confirmedRefundsXOF += amount;
       }
     }
 
     let approvedCostsXOF = 0;
-    const costByOrder = new Map<string, number>();
-    for (const rawAllocation of allocationsResult.docs) {
-      const allocation = rawAllocation as unknown as RecordValue;
+    for (const raw of costAllocationsResult.docs) {
+      const allocation = raw as unknown as RecordValue;
       const orderId = relationId(allocation.order);
-      const amount = asAmount(allocation.allocatedCostXOF);
-      approvedCostsXOF += amount;
-      if (orderId) costByOrder.set(orderId, (costByOrder.get(orderId) ?? 0) + amount);
+      const cost = asAmount(allocation.allocatedCostXOF);
+      approvedCostsXOF += cost;
+      if (orderId) orderCostsXOF.set(orderId, (orderCostsXOF.get(orderId) ?? 0) + cost);
     }
 
-    const ordersWithReceiptsNoCostAllocation = [...orderIdsWithReceipts].filter(
-      (id) => !costByOrder.has(id),
-    ).length;
-    const netReceiptsXOF = receiptsXOF - refundsXOF;
-    const knownResultXOF = netReceiptsXOF - approvedCostsXOF;
+    let ordersWithMissingCostAllocation = 0;
+    let orderContributionXOF = 0;
+    for (const [orderId, receipts] of receiptsByOrder) {
+      const cost = orderCostsXOF.get(orderId);
+      if (cost === undefined) {
+        ordersWithMissingCostAllocation += 1;
+        continue;
+      }
+      orderContributionXOF += receipts - cost;
+    }
+
+    const netReceiptsXOF = confirmedReceiptsXOF - confirmedRefundsXOF;
+    const resultAfterCostsXOF = netReceiptsXOF - approvedCostsXOF;
 
     return Response.json({
       currency: "XOF",
       balances: {
         outstandingXOF: Math.round(outstandingXOF),
         outstandingOrders,
-        excludedForeignCurrencyOrders: foreignCurrencyOrders,
-        basis: "orderDetails.totalWithShipping minus orderDetails.amountPaid",
+        excludedForeignCurrencyOrders,
+        ordersUsingLegacyManualPaidAmount: legacyPaymentOrders,
+        basis: "Confirmed payment allocations when present; otherwise legacy orderDetails.amountPaid. Orders in other currencies are excluded.",
       },
       profitability: {
-        confirmedReceiptsXOF: Math.round(receiptsXOF),
-        confirmedRefundsXOF: Math.round(refundsXOF),
+        confirmedReceiptsXOF: Math.round(confirmedReceiptsXOF),
+        confirmedRefundsXOF: Math.round(confirmedRefundsXOF),
         netReceiptsXOF: Math.round(netReceiptsXOF),
         approvedAllocatedCostsXOF: Math.round(approvedCostsXOF),
-        knownResultAfterAllocatedCostsXOF: Math.round(knownResultXOF),
-        ordersWithReceiptsNoCostAllocation,
+        resultAfterAllocatedCostsXOF: Math.round(resultAfterCostsXOF),
+        contributionForOrdersWithKnownCostsXOF: Math.round(orderContributionXOF),
+        ordersWithMissingCostAllocation,
+        foreignCurrencyPaymentTransactionsExcluded: foreignCurrencyReceipts,
         isCompleteProfit: false,
-        note: "Indicateur partiel : seuls les encaissements et remboursements confirmés en XOF et les coûts affectés validés sont inclus. Les coûts non encore saisis ou affectés peuvent manquer ; ce résultat ne doit pas être présenté comme un bénéfice net.",
+        note: "Résultat de trésorerie après coûts affectés approuvés, pas un bénéfice net comptable. Les frais non enregistrés, les opérations en devises non converties et les commandes sans affectation de coût empêchent de certifier le bénéfice réel.",
       },
     });
   } catch (error) {
