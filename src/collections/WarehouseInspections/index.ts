@@ -60,6 +60,12 @@ export const WarehouseInspections: CollectionConfig = {
             (packagesExpected !== undefined && packagesReceived !== undefined && packagesReceived > packagesExpected)) {
           throw new Error("Les quantités de colis et de produits inspectés sont incohérentes.");
         }
+        if (data.result === "passed" && (damaged > 0 || missing > 0)) {
+          throw new Error("Une inspection avec des produits endommagés ou manquants doit être validée avec réserves ou déclarée non conforme.");
+        }
+        if (data.result === "passed_with_reservations" && damaged + missing === 0) {
+          throw new Error("Indiquez au moins une réserve réelle ou choisissez « Conforme ».");
+        }
         return data;
       },
     ],
