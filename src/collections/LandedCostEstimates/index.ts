@@ -6,7 +6,7 @@ const administratorsOnly: Access = ({ req }) =>
 const numeric = (value: unknown): number | undefined =>
   typeof value === "number" && Number.isFinite(value) ? value : undefined;
 
-export const LandedCostEstimates: CollectionConfig = {
+export const LandedCostEstimates: CollectionConfig<"landed-cost-estimates"> = {
   slug: "landed-cost-estimates",
   labels: { singular: "Simulation de coût rendu", plural: "Simulations de coût rendu" },
   admin: {
