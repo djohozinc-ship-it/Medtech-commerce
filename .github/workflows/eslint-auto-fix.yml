@@ -31,6 +31,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Run safe ESLint auto-fixes
         run: pnpm exec eslint . --fix
+        continue-on-error: true
       - name: Commit auto-fixes if any
         run: |
           if git diff --quiet; then
