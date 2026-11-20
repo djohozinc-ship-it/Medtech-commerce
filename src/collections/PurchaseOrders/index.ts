@@ -235,6 +235,12 @@ export const PurchaseOrders: CollectionConfig = {
             depth: 0,
             overrideAccess: true,
           });
+          const offerRequestId = typeof offer.sourcingRequest === "object" && offer.sourcingRequest !== null
+            ? offer.sourcingRequest.id
+            : offer.sourcingRequest;
+          if (sourcingRequestId && String(offerRequestId ?? "") !== String(sourcingRequestId)) {
+            throw new Error("L'offre fournisseur doit être rattachée à la même demande client que le bon de commande.");
+          }
           if (offer.quoteStatus !== "approved") {
             throw new Error("Le bon de commande ne peut utiliser qu'une offre fournisseur validée.");
           }
