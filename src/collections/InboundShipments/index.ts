@@ -150,7 +150,7 @@ export const InboundShipments: CollectionConfig = {
     ],
     afterChange: [
       async ({ doc, previousDoc, req }) => {
-        const eventStatus: Record<string, string> = {
+        const eventStatus = {
           received_china: "arrived_china_warehouse",
           consolidation: "consolidated",
           ready_to_ship: "consolidated",
@@ -160,7 +160,7 @@ export const InboundShipments: CollectionConfig = {
           customs: "customs_clearance",
           received_benin: "ready_for_delivery",
           exception: "exception",
-        };
+        } as const;
         const mapped = eventStatus[String(doc.status)];
         if (!mapped) return doc;
 
@@ -216,9 +216,9 @@ export const InboundShipments: CollectionConfig = {
             status: mapped,
             ...(statusChanged || !existingEvent ? { eventDate: new Date().toISOString() } : {}),
             location: ["arrived_benin", "customs", "received_benin"].includes(String(doc.status)) ? "Bénin" : "Chine",
-            carrier: doc.freightForwarder || null,
-            trackingCode: doc.trackingNumber || null,
-            trackingUrl: doc.trackingUrl || null,
+            ...(doc.freightForwarder ? { carrier: doc.freightForwarder } : {}),
+            ...(doc.trackingNumber ? { trackingCode: doc.trackingNumber } : {}),
+            ...(doc.trackingUrl ? { trackingUrl: doc.trackingUrl } : {}),
             customerMessage: doc.customerUpdate || "",
             visibleToCustomer: true,
           };
