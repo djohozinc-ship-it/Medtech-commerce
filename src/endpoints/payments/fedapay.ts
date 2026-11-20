@@ -108,7 +108,7 @@ export const createFedaPayPayment = async (req: PayloadRequest) => {
     }
 
     const address = record(order.shippingAddress);
-    const fullName = String(address.name ?? "Client Medtech Commerce").trim().split(/\s+/);
+    const fullName = primitiveString(address.name) ?? "Client Medtech Commerce".trim().split(/\s+/);
     const firstname = fullName[0] || "Client";
     const lastname = fullName.slice(1).join(" ") || "Medtech Commerce";
     const email = primitiveString(address.email) ?? "";
