@@ -139,6 +139,47 @@ export const CashTransactions: CollectionConfig = {
           if (orderCustomerId !== customerId) throw new Error("Le client de l'encaissement ne correspond pas au client de la commande.");
           if (String(order.orderDetails?.currency ?? "") !== String(data.currency ?? originalDoc?.currency ?? "")) throw new Error("La devise de l'encaissement doit correspondre à celle de la commande.");
         }
+        if (transactionType === "customer_refund" && (data.status ?? originalDoc?.status) === "confirmed") {
+          const customerValue = data.customer ?? originalDoc?.customer;
+          const customerId = typeof customerValue === "object" && customerValue ? String(customerValue.id ?? "") : String(customerValue ?? "");
+          const orderValue = data.order ?? originalDoc?.order;
+          const orderId = typeof orderValue === "object" && orderValue ? String(orderValue.id ?? "") : String(orderValue ?? "");
+          const proof = data.proofDocuments ?? originalDoc?.proofDocuments;
+          const providerReference = data.providerTransactionId ?? originalDoc?.providerTransactionId;
+          const confirmedBy = data.confirmedBy ?? originalDoc?.confirmedBy;
+          const refundAmount = Number(data.amount ?? originalDoc?.amount);
+          if (!customerId || !orderId) throw new Error("Un remboursement confirmé doit être lié au client et à la commande concernés.");
+          if ((!Array.isArray(proof) || proof.length === 0) && !providerReference) throw new Error("Justificatif ou référence de remboursement obligatoire.");
+          if (!confirmedBy) throw new Error("Indiquez la personne ayant vérifié le remboursement.");
+          const order = await req.payload.findByID({ collection: "orders", id: orderId, depth: 0, overrideAccess: true }) as any;
+          const orderCustomerId = typeof order.customer === "object" && order.customer ? String(order.customer.id ?? "") : String(order.customer ?? "");
+          if (orderCustomerId !== customerId) throw new Error("Le client du remboursement ne correspond pas au client de la commande.");
+          if (String(order.orderDetails?.currency ?? "") !== String(data.currency ?? originalDoc?.currency ?? "")) throw new Error("La devise du remboursement doit correspondre à celle de la commande.");
+          if (!Number.isFinite(refundAmount) || refundAmount <= 0) throw new Error("Montant de remboursement invalide.");
+          const existing = await req.payload.find({
+            collection: "cash-transactions",
+            where: { and: [
+              { order: { equals: orderId } },
+              { transactionType: { equals: "customer_refund" } },
+              { status: { equals: "confirmed" } },
+            ] },
+            limit: 10000, pagination: false, depth: 0, overrideAccess: true,
+          });
+          const currentId = originalDoc?.id ? String(originalDoc.id) : "";
+          const refunded = existing.docs.reduce((sum, item) => String(item.id) === currentId ? sum : sum + Number(item.amount ?? 0), 0);
+          const payments = await req.payload.find({
+            collection: "cash-transactions",
+            where: { and: [
+              { order: { equals: orderId } },
+              { transactionType: { equals: "customer_payment" } },
+              { status: { equals: "confirmed" } },
+              { currency: { equals: data.currency ?? originalDoc?.currency } },
+            ] },
+            limit: 10000, pagination: false, depth: 0, overrideAccess: true,
+          });
+          const received = payments.docs.reduce((sum, item) => sum + Number(item.amount ?? 0), 0);
+          if (refunded + refundAmount > received + 0.01) throw new Error("Le remboursement cumulé dépasse les paiements client confirmés.");
+        }
         if (transactionType === "supplier_payment" && !purchaseOrderId) throw new Error("Un paiement fournisseur doit être lié à un bon de commande.");
         if (transactionType === "supplier_payment" && (data.status ?? originalDoc?.status) === "confirmed") {
           const proof = data.proofDocuments ?? originalDoc?.proofDocuments;
