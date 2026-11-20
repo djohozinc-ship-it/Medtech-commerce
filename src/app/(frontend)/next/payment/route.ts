@@ -214,43 +214,32 @@ export async function POST(req: Request) {
       },
     });
 
-    filledProducts.forEach((product) => {
-      const newBoughtCount = product.bought ?? 0 + (product?.quantity ?? 0);
+    await Promise.all(filledProducts.map(async (product) => {
+      const newBoughtCount = (product.bought ?? 0) + (product.quantity ?? 0);
       if (product.enableVariants && product.variant && product.variants) {
         const variant = product.variant;
-        if (variant.stock) {
-          const newStock = variant.stock - (product?.quantity ?? 0);
-          void payload.update({
+        if (typeof variant.stock === "number") {
+          const newStock = variant.stock - (product.quantity ?? 0);
+          await payload.update({
             collection: "products",
             id: product.id,
             data: {
-              variants: product.variants?.map((v) => {
-                if (v.variantSlug === variant.variantSlug) {
-                  return {
-                    ...v,
-                    stock: newStock,
-                  };
-                }
-                return v;
-              }),
+              variants: product.variants.map((v) =>
+                v.variantSlug === variant.variantSlug ? { ...v, stock: newStock } : v,
+              ),
               bought: newBoughtCount,
             },
           });
         }
-      } else {
-        if (product.stock) {
-          const newStock = product.stock - (product?.quantity ?? 0);
-          void payload.update({
-            collection: "products",
-            id: product.id,
-            data: {
-              stock: newStock,
-              bought: newBoughtCount,
-            },
-          });
-        }
+      } else if (typeof product.stock === "number") {
+        const newStock = product.stock - (product.quantity ?? 0);
+        await payload.update({
+          collection: "products",
+          id: product.id,
+          data: { stock: newStock, bought: newBoughtCount },
+        });
       }
-    });
+    }));
 
     if (user) {
       void payload.update({
