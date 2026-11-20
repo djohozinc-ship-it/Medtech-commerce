@@ -170,9 +170,10 @@ export const SourcingRequests: CollectionConfig = {
         { label: "Recherche fournisseur", value: "supplier_search" },
         { label: "Devis en préparation", value: "quote_preparation" },
         { label: "Devis envoyé", value: "quote_sent" },
-        { label: "Acceptée par le client", value: "accepted" },
+        { label: "Conversion en commande", value: "converting_to_order" },
         { label: "Refusée par le client", value: "declined" },
         { label: "Convertie en commande", value: "converted_to_order" },
+        { label: "Devis expiré", value: "expired" },
         { label: "Impossible à approvisionner", value: "unavailable" },
       ],
     },
@@ -203,7 +204,7 @@ export const SourcingRequests: CollectionConfig = {
             {
               name: "quotedAmount",
               type: "number",
-              label: "Montant total proposé au client",
+              label: "Montant des produits (hors transport)",
               min: 0,
             },
             {
