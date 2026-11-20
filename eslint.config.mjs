@@ -14,7 +14,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ["**/*.js", "**/*.jsx", "src/app/(payload)/**/*", "src/payload-types.ts"],
+    ignores: ["**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs", "src/app/(payload)/**/*", "src/payload-types.ts"],
   },
   ...fixupConfigRules(
     compat.extends(
