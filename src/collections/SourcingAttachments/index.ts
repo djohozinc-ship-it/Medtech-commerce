@@ -19,10 +19,10 @@ export const SourcingAttachments: CollectionConfig = {
     plural: "Pièces jointes de demandes",
   },
   access: {
-    create: () => true,
-    read: authenticated,
-    update: authenticated,
-    delete: authenticated,
+    create: ({ req }) => req.user?.collection === "customers" || req.user?.collection === "administrators",
+    read: ({ req }) => req.user?.collection === "administrators",
+    update: ({ req }) => req.user?.collection === "administrators",
+    delete: ({ req }) => req.user?.collection === "administrators",
   },
   admin: {
     useAsTitle: "filename",
