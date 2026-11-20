@@ -179,6 +179,10 @@ const confirmFedaPayTransaction = async (req: PayloadRequest, remoteId: string) 
   const remoteBody = await fedapayRequest(`/transactions/${encodeURIComponent(remoteId)}`, { method: "GET" });
   const remote = getRemoteTransaction(remoteBody);
   if (String(remote.id) !== remoteId) return { ok: false, status: 400, message: "Identifiant prestataire invalide" };
+  const remoteCurrency = record(remote.currency).iso ?? remote.currency_iso;
+  if (remoteCurrency && remoteCurrency !== "XOF") {
+    return { ok: false, status: 400, message: "La devise de la transaction prestataire ne correspond pas à XOF" };
+  }
 
   const attemptId = attempt.id;
   const orderId = idOf(attempt.order);
@@ -200,6 +204,7 @@ const confirmFedaPayTransaction = async (req: PayloadRequest, remoteId: string) 
     overrideAccess: true,
     where: { providerTransactionId: { equals: remoteId } },
   });
+  let cashTransactionId: string | number;
   if (duplicate.docs.length === 0) {
     const cash = await req.payload.create({
       collection: "cash-transactions",
@@ -220,14 +225,26 @@ const confirmFedaPayTransaction = async (req: PayloadRequest, remoteId: string) 
         confirmationNotes: "Statut approved vérifié directement auprès de l'API FedaPay.",
       },
     });
+    cashTransactionId = cash.id;
+  } else {
+    cashTransactionId = (duplicate.docs[0] as unknown as AnyRecord).id;
+  }
 
+  const existingAllocation = await req.payload.find({
+    collection: "order-payment-allocations",
+    depth: 0,
+    limit: 1,
+    overrideAccess: true,
+    where: { cashTransaction: { equals: cashTransactionId } },
+  });
+  if (existingAllocation.docs.length === 0) {
     await req.payload.create({
       collection: "order-payment-allocations",
       overrideAccess: true,
       data: {
         allocationReference: `FDP-ALLOC-${remoteId}`,
         order: orderId,
-        cashTransaction: cash.id,
+        cashTransaction: cashTransactionId,
         allocatedAmount: amount,
         currency: "XOF",
         exchangeRateToOrderCurrency: 1,
