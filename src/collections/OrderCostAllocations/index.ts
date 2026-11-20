@@ -90,15 +90,36 @@ export const OrderCostAllocations: CollectionConfig = {
   ],
   hooks: {
     beforeValidate: [
-      ({ data }) => {
+      async ({ data, originalDoc, req }) => {
         if (!data) return data;
-        const amount = numberOrUndefined(data.allocatedSourceAmount);
-        const rate = numberOrUndefined(data.exchangeRateToXOF);
-        if (amount === undefined || rate === undefined || rate <= 0) {
+        const amount = numberOrUndefined(data.allocatedSourceAmount ?? originalDoc?.allocatedSourceAmount);
+        const rate = numberOrUndefined(data.exchangeRateToXOF ?? originalDoc?.exchangeRateToXOF);
+        if (amount === undefined || rate === undefined || amount < 0 || rate <= 0) {
           delete data.allocatedCostXOF;
+          if ((data.status ?? originalDoc?.status) === "approved") throw new Error("Un coût approuvé exige un montant et un taux valides.");
           return data;
         }
         data.allocatedCostXOF = Math.round(amount * rate);
+        if ((data.status ?? originalDoc?.status) !== "approved") return data;
+        if (amount <= 0 || data.allocatedCostXOF <= 0) throw new Error("Un coût approuvé doit être strictement positif.");
+        const idOf = (value: unknown): string | undefined => {
+          if (typeof value === "string" || typeof value === "number") return String(value);
+          if (value && typeof value === "object" && "id" in value) return String((value as { id?: string | number }).id ?? "");
+          return undefined;
+        };
+        const sourceId = idOf(data.cashTransaction ?? originalDoc?.cashTransaction);
+        const evidence = data.allocationEvidence ?? originalDoc?.allocationEvidence;
+        const notes = data.calculationNotes ?? originalDoc?.calculationNotes;
+        if (!sourceId && (!Array.isArray(evidence) || evidence.length === 0) && !String(notes ?? "").trim()) throw new Error("Justificatif, dépense source ou détail de calcul requis pour approuver le coût.");
+        if (sourceId) {
+          const source = await req.payload.findByID({ collection: "cash-transactions", id: sourceId, depth: 0, overrideAccess: true });
+          if (source.status !== "confirmed" || ["customer_payment", "customer_refund"].includes(String(source.transactionType))) throw new Error("La dépense source doit être confirmée.");
+          if (source.currency !== (data.sourceCurrency ?? originalDoc?.sourceCurrency)) throw new Error("La devise de la dépense source et de l'affectation doit correspondre.");
+          const allocations = await req.payload.find({ collection: "order-cost-allocations", where: { cashTransaction: { equals: sourceId } }, limit: 10000, pagination: false, depth: 0, overrideAccess: true });
+          const currentId = originalDoc?.id ? String(originalDoc.id) : "";
+          const totalAllocated = allocations.docs.reduce((sum, item) => String(item.id) === currentId || item.status !== "approved" ? sum : sum + Number(item.allocatedSourceAmount ?? 0), 0);
+          if (totalAllocated + amount > Number(source.amount ?? 0) + 0.01) throw new Error("Les coûts affectés dépassent le montant de la dépense source.");
+        }
         return data;
       },
     ],
