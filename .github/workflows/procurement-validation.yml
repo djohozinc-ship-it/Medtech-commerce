@@ -68,5 +68,7 @@ jobs:
         run: pnpm generate:types
       - name: TypeScript check
         run: pnpm exec tsc --noEmit
+      - name: ESLint validation
+        run: pnpm lint
       - name: Production build
         run: pnpm build
