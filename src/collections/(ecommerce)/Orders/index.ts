@@ -108,6 +108,14 @@ export const Orders: CollectionConfig = {
   ],
   fields: [
     {
+      name: "sourcingRequest",
+      type: "relationship",
+      relationTo: "sourcing-requests",
+      label: "Demande de sourcing d'origine",
+      admin: { hidden: true, readOnly: true },
+      index: true,
+    },
+    {
       name: "id",
       type: "text",
       admin: {
