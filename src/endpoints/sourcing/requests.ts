@@ -24,8 +24,9 @@ export const getMySourcingRequests = async (req: PayloadRequest) => {
     return Response.json({ message: "Connexion client requise" }, { status: 401 });
   }
 
+  const payload = req.payload as any;
   try {
-    const result = await req.payload.find({
+    const result = await payload.find({
       collection: "sourcing-requests",
       overrideAccess: true,
       pagination: false,
@@ -85,8 +86,9 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
     return Response.json({ message: "Demande ou action invalide" }, { status: 400 });
   }
 
+  const payload = req.payload as any;
   try {
-    const sourcingRequest = await req.payload.findByID({
+    const sourcingRequest = await payload.findByID({
       collection: "sourcing-requests",
       id: requestId,
       depth: 0,
@@ -105,14 +107,14 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
     }
 
     if (sourcingRequest.status === "converting_to_order") {
-      const existingOrder = await req.payload.find({
+      const existingOrder = await payload.find({
         collection: "orders",
         where: { sourcingRequest: { equals: requestId } },
         limit: 1,
         overrideAccess: true,
       });
       if (existingOrder.docs[0]) {
-        await req.payload.update({
+        await payload.update({
           collection: "sourcing-requests",
           id: requestId,
           overrideAccess: true,
@@ -203,7 +205,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
         return Response.json({ status: "converted_to_order", orderId: existingOrder.docs[0].id }, { status: 201 });
       }
       const unitPrice = amount / quantity;
-      const order = await req.payload.create({
+      const order = await payload.create({
         collection: "orders",
         overrideAccess: true,
         data: {
