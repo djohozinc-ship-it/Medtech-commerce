@@ -1,6 +1,6 @@
 import type { CollectionConfig } from "payload";
 
-import { authenticated } from "@/access/authenticated";
+
 
 /**
  * Historique logistique d'une commande.
@@ -14,10 +14,10 @@ export const ShipmentEvents: CollectionConfig = {
     plural: "Suivi logistique",
   },
   access: {
-    create: authenticated,
-    delete: authenticated,
-    read: authenticated,
-    update: authenticated,
+    create: ({ req }) => req.user?.collection === "administrators",
+    delete: ({ req }) => req.user?.collection === "administrators",
+    read: ({ req }) => req.user?.collection === "administrators",
+    update: ({ req }) => req.user?.collection === "administrators",
   },
   admin: {
     useAsTitle: "reference",
@@ -32,6 +32,13 @@ export const ShipmentEvents: CollectionConfig = {
       type: "text",
       label: "Référence de suivi",
       required: true,
+      index: true,
+    },
+    {
+      name: "inboundShipment",
+      type: "relationship",
+      relationTo: "inbound-shipments",
+      label: "Expédition internationale associée",
       index: true,
     },
     {
