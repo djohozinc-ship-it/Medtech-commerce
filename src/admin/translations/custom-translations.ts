@@ -63,6 +63,22 @@ export const customTranslationsObject = {
       openMenu: "Open menu",
     },
   },
+  fr: {
+    custom: {
+      inPostMessage: "InPost facture la création des expéditions. Vérifiez votre solde, les données du client et les dimensions avant de créer une expédition.",
+      generating: "Génération...",
+      downloadLabel: "Télécharger l’étiquette",
+      downloadingLabel: "Téléchargement...",
+      createPackage: "Créer le colis",
+      resetPackage: "Réinitialiser le colis",
+      resetPassword: "Réinitialiser le mot de passe (saisir l’e-mail dans le formulaire)",
+      resetPasswordSuccess: "Le lien de réinitialisation a été envoyé par e-mail",
+      resetPasswordError: "Erreur lors de la réinitialisation du mot de passe",
+    },
+    adminDashboard: {
+      linkTitle: "Tableau de bord", searchNoResults: "Aucun résultat", search: "Rechercher dans les collections...", addProduct: "Ajouter un produit", totalRevenue: "Chiffre d’affaires total", totalOrders: "Nombre total de commandes", rangedRevenue: "Chiffre d’affaires sur la période", rangedOrders: "Commandes sur la période", "from-last-month": "par rapport au mois dernier", overview: "Vue d’ensemble", revenue: "Chiffre d’affaires", orders: "Commandes", columns: "Colonnes", jan: "Janvier", feb: "Février", mar: "Mars", apr: "Avril", may: "Mai", jun: "Juin", jul: "Juillet", aug: "Août", sep: "Septembre", oct: "Octobre", nov: "Novembre", dec: "Décembre", filterEmails: "Filtrer les e-mails...", recentOrders: "Commandes récentes", date: "Date", status: "Statut", email: "E-mail", amount: "Montant", pending: "En attente", paid: "Payée", unpaid: "Non payée", processing: "En traitement", shipped: "Expédiée", completed: "Terminée", cancelled: "Annulée", returned: "Retournée", previous: "Précédent", next: "Suivant", actions: "Actions", copyPaymentID: "Copier l’identifiant du paiement", viewCustomer: "Voir le client", viewOrder: "Voir la commande", openMenu: "Ouvrir le menu",
+    },
+  },
   pl: {
     custom: {
       inPostMessage:

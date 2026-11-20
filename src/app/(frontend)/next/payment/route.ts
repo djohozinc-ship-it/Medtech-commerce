@@ -42,8 +42,27 @@ export async function POST(req: Request) {
       checkoutData: CheckoutFormData;
       currency: Currency;
     };
-    if (!cart) {
-      return Response.json({ status: 200 });
+    if (checkoutData?.shipping?.country !== selectedCountry) {
+      return Response.json({ status: 400, message: "Le pays de livraison sélectionné ne correspond pas aux coordonnées de livraison." });
+    }
+    if (!["fr", "en", "pl"].includes(locale)) {
+      return Response.json({ status: 400, message: "Langue de commande invalide." });
+    }
+    if (!Array.isArray(cart) || cart.length === 0 || cart.length > 50) {
+      return Response.json({ status: 400, message: "Panier invalide ou trop volumineux." });
+    }
+    const seenItems = new Set<string>();
+    for (const item of cart) {
+      if (!item || typeof item.id !== "string" || !item.id.trim() ||
+          !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 100 ||
+          (item.choosenVariantSlug !== undefined && typeof item.choosenVariantSlug !== "string")) {
+        return Response.json({ status: 400, message: "Article ou quantité invalide dans le panier." });
+      }
+      const key = `${item.id}:${item.choosenVariantSlug ?? ""}`;
+      if (seenItems.has(key)) {
+        return Response.json({ status: 400, message: "Un même article/variant ne doit pas apparaître plusieurs fois." });
+      }
+      seenItems.add(key);
     }
 
     const { docs: products } = await payload.find({
@@ -70,7 +89,32 @@ export async function POST(req: Request) {
       },
     });
 
+    if (products.length !== new Set(cart.map((item) => item.id)).size) {
+      return Response.json({ status: 400, message: "Un ou plusieurs produits ne sont plus disponibles." });
+    }
+
     const filledProducts = getFilledProducts(products, cart);
+    if (filledProducts.length !== cart.length) {
+      return Response.json({ status: 400, message: "Un variant demandé n'existe plus." });
+    }
+
+    for (const product of filledProducts) {
+      const quantity = product.quantity ?? 0;
+      const stock = product.enableVariants && product.variant
+        ? product.variant.stock
+        : product.stock;
+      if (typeof stock === "number" && quantity > stock) {
+        return Response.json({ status: 409, message: `Stock insuffisant pour ${product.title}.` });
+      }
+      const selectedPrices = product.enableVariants && product.enableVariantPrices && product.variant
+        ? product.variant.pricing
+        : product.pricing;
+      const price = selectedPrices?.find((entry) => entry.currency === currency)?.value;
+      if (typeof price !== "number" || !Number.isFinite(price) || price < 0) {
+        return Response.json({ status: 400, message: `Prix indisponible dans la devise choisie pour ${product.title}.` });
+      }
+    }
+
     const total = getTotal(filledProducts);
     const totalWeight = getTotalWeight(filledProducts, cart);
     const couriers = await createCouriers(locale);
@@ -85,7 +129,7 @@ export async function POST(req: Request) {
       ?.range?.find((range) => range.weightFrom <= totalWeight && range.weightTo >= totalWeight)
       ?.pricing.find((pricing) => pricing.currency === currency)?.value;
 
-    if (!shippingCost) {
+    if (typeof shippingCost !== "number" || !Number.isFinite(shippingCost) || shippingCost < 0) {
       return Response.json({ status: 400, message: "Shipping cost not found" });
     }
 
@@ -97,6 +141,7 @@ export async function POST(req: Request) {
 
     const order = await payload.create({
       collection: "orders",
+      overrideAccess: true,
       data: {
         customer: user?.id,
         extractedFromStock: true,
@@ -132,8 +177,8 @@ export async function POST(req: Request) {
               : checkoutData.shipping.city,
           country:
             checkoutData.individualInvoice && checkoutData.invoice
-              ? (checkoutData.invoice.country as Country)
-              : (checkoutData.shipping.country as Country),
+              ? checkoutData.invoice.country
+              : checkoutData.shipping.country,
           isCompany: checkoutData.buyerType === "company",
           name:
             checkoutData.individualInvoice && checkoutData.invoice
@@ -161,7 +206,7 @@ export async function POST(req: Request) {
           name: checkoutData.shipping.name,
           address: checkoutData.shipping.address,
           city: checkoutData.shipping.city,
-          country: checkoutData.shipping.country as Country,
+          country: checkoutData.shipping.country,
           region: checkoutData.shipping.region,
           postalCode: checkoutData.shipping.postalCode,
           email: checkoutData.shipping.email,
@@ -175,43 +220,32 @@ export async function POST(req: Request) {
       },
     });
 
-    filledProducts.forEach((product) => {
-      const newBoughtCount = product.bought ?? 0 + (product?.quantity ?? 0);
+    await Promise.all(filledProducts.map(async (product) => {
+      const newBoughtCount = (product.bought ?? 0) + (product.quantity ?? 0);
       if (product.enableVariants && product.variant && product.variants) {
         const variant = product.variant;
-        if (variant.stock) {
-          const newStock = variant.stock - (product?.quantity ?? 0);
-          void payload.update({
+        if (typeof variant.stock === "number") {
+          const newStock = variant.stock - (product.quantity ?? 0);
+          await payload.update({
             collection: "products",
             id: product.id,
             data: {
-              variants: product.variants?.map((v) => {
-                if (v.variantSlug === variant.variantSlug) {
-                  return {
-                    ...v,
-                    stock: newStock,
-                  };
-                }
-                return v;
-              }),
+              variants: product.variants.map((v) =>
+                v.variantSlug === variant.variantSlug ? { ...v, stock: newStock } : v,
+              ),
               bought: newBoughtCount,
             },
           });
         }
-      } else {
-        if (product.stock) {
-          const newStock = product.stock - (product?.quantity ?? 0);
-          void payload.update({
-            collection: "products",
-            id: product.id,
-            data: {
-              stock: newStock,
-              bought: newBoughtCount,
-            },
-          });
-        }
+      } else if (typeof product.stock === "number") {
+        const newStock = product.stock - (product.quantity ?? 0);
+        await payload.update({
+          collection: "products",
+          id: product.id,
+          data: { stock: newStock, bought: newBoughtCount },
+        });
       }
-    });
+    }));
 
     if (user) {
       void payload.update({

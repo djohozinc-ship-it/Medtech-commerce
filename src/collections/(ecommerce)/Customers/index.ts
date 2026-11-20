@@ -1,14 +1,26 @@
 import { revalidateTag } from "next/cache";
-import { type CollectionConfig } from "payload";
+import { type Access, type CollectionConfig } from "payload";
 
 import { countryList } from "@/globals/(ecommerce)/Couriers/utils/countryList";
 
 import { createTokenAndSendEmail } from "./hooks/createTokenAndSendEmail";
 
-export const Customers: CollectionConfig = {
+const customerOrAdministrator: Access = ({ req }) => {
+  if (req.user?.collection === "administrators") return true;
+  if (req.user?.collection === "customers") return { id: { equals: req.user.id } };
+  return false;
+};
+
+const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
+
+export const Customers: CollectionConfig<"customers"> = {
   slug: "customers",
   access: {
+    admin: ({ req }) => req.user?.collection === "administrators",
     create: () => true,
+    read: customerOrAdministrator,
+    update: customerOrAdministrator,
+    delete: administratorsOnly,
   },
   labels: {
     singular: {
@@ -29,8 +41,8 @@ export const Customers: CollectionConfig = {
     useAsTitle: "fullName",
   },
   auth: {
-    maxLoginAttempts: 30,
-    lockTime: 30 * 1000,
+    maxLoginAttempts: 5,
+    lockTime: 15 * 60 * 1000,
     verify: true,
   },
   hooks: {
@@ -41,8 +53,10 @@ export const Customers: CollectionConfig = {
       },
     ],
     beforeChange: [
-      async ({ data }) => {
-        return { ...data, fullName: `${data.firstName} ${data.lastName}` };
+      async ({ data, originalDoc }) => {
+        const firstName = data?.firstName ?? originalDoc?.firstName ?? "";
+        const lastName = data?.lastName ?? originalDoc?.lastName ?? "";
+        return { ...data, fullName: `${firstName} ${lastName}`.trim() };
       },
     ],
   },
@@ -167,7 +181,7 @@ export const Customers: CollectionConfig = {
             },
             {
               name: "country",
-              type: "select",
+              type: "text",
               label: {
                 en: "Country",
                 pl: "Kraj",
@@ -175,7 +189,9 @@ export const Customers: CollectionConfig = {
               admin: {
                 width: "50%",
               },
-              options: [...countryList],
+              validate: (value) =>
+                countryList.some((country) => country.value === value) ||
+                "Select a supported country.",
               required: true,
             },
           ],

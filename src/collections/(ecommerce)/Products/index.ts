@@ -534,6 +534,109 @@ export const Products: CollectionConfig = {
           },
           fields: [
             {
+              name: "commercialType",
+              type: "select",
+              label: { en: "Commercial category", fr: "Type commercial", pl: "Typ handlowy" },
+              defaultValue: "equipment",
+              required: true,
+              options: [
+                { label: { en: "Biomedical equipment", fr: "Équipement biomédical", pl: "Sprzęt biomedyczny" }, value: "equipment" },
+                { label: { en: "Spare part / accessory", fr: "Pièce détachée / accessoire", pl: "Część / akcesorium" }, value: "spare_part" },
+                { label: { en: "Maintenance tool", fr: "Outil de maintenance", pl: "Narzędzie serwisowe" }, value: "maintenance_tool" },
+                { label: { en: "Technology / electronics", fr: "Technologie / électronique", pl: "Technologia / elektronika" }, value: "technology" },
+                { label: { en: "Other product", fr: "Autre produit", pl: "Inny produkt" }, value: "other" },
+              ],
+            },
+            {
+              name: "salesMode",
+              type: "select",
+              label: { en: "Sales mode", fr: "Mode de commercialisation", pl: "Tryb sprzedaży" },
+              defaultValue: "direct",
+              required: true,
+              options: [
+                { label: { en: "Direct order", fr: "Commande directe", pl: "Zamówienie bezpośrednie" }, value: "direct" },
+                { label: { en: "Quote / sourcing request", fr: "Sur devis / approvisionnement", pl: "Na zapytanie / sourcing" }, value: "quote" },
+              ],
+              admin: { description: { en: "Use quote mode when availability or landed price must be confirmed with a supplier.", fr: "Choisir le devis lorsque la disponibilité ou le coût rendu doit être confirmé auprès du fournisseur.", pl: "Wybierz wycenę, gdy dostępność lub koszt dostawy wymaga potwierdzenia u dostawcy." } },
+            },
+            {
+              type: "row",
+              fields: [
+                { name: "manufacturer", type: "text", label: { en: "Manufacturer", fr: "Fabricant", pl: "Producent" } },
+                { name: "brand", type: "text", label: { en: "Brand", fr: "Marque", pl: "Marka" } },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                { name: "modelReference", type: "text", label: { en: "Model / reference", fr: "Modèle / référence", pl: "Model / referencja" } },
+                { name: "originCountry", type: "text", label: { en: "Country of origin", fr: "Pays d'origine", pl: "Kraj pochodzenia" }, defaultValue: "China" },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                { name: "warrantyMonths", type: "number", min: 0, label: { en: "Warranty (months)", fr: "Garantie (mois)", pl: "Gwarancja (miesiące)" } },
+                { name: "leadTimeDays", type: "number", min: 0, label: { en: "Estimated sourcing lead time (days)", fr: "Délai d'approvisionnement estimé (jours)", pl: "Szacowany czas dostawy (dni)" } },
+              ],
+            },
+            {
+              name: "availabilityMode",
+              type: "select",
+              label: { en: "Availability", fr: "Disponibilité", pl: "Dostępność" },
+              defaultValue: "on_order",
+              required: true,
+              options: [
+                { label: { en: "Available in stock", fr: "Disponible en stock", pl: "Dostępny w magazynie" }, value: "in_stock" },
+                { label: { en: "Available on order", fr: "Disponible sur commande", pl: "Dostępny na zamówienie" }, value: "on_order" },
+                { label: { en: "Availability to confirm", fr: "Disponibilité à confirmer", pl: "Dostępność do potwierdzenia" }, value: "to_confirm" },
+              ],
+            },
+            {
+              name: "technicalSpecifications",
+              type: "textarea",
+              label: { en: "Technical specifications / compatibility", fr: "Caractéristiques techniques / compatibilité", pl: "Specyfikacja techniczna / kompatybilność" },
+            },
+            {
+              name: "technicalSpecs",
+              type: "array",
+              label: { en: "Structured technical specifications", fr: "Caractéristiques techniques détaillées", pl: "Szczegółowa specyfikacja techniczna" },
+              labels: {
+                singular: { en: "Specification", fr: "Caractéristique", pl: "Specyfikacja" },
+                plural: { en: "Specifications", fr: "Caractéristiques", pl: "Specyfikacje" },
+              },
+              admin: {
+                description: {
+                  en: "Add one measurable or verifiable specification per row (e.g. measurement range, accuracy, power supply).",
+                  fr: "Ajouter une caractéristique mesurable ou vérifiable par ligne (ex. plage de mesure, précision, alimentation).",
+                  pl: "Dodaj jedną mierzalną lub możliwą do sprawdzenia cechę w każdym wierszu.",
+                },
+                initCollapsed: true,
+              },
+              fields: [
+                {
+                  name: "label",
+                  type: "text",
+                  required: true,
+                  label: { en: "Specification", fr: "Caractéristique", pl: "Specyfikacja" },
+                },
+                {
+                  name: "value",
+                  type: "text",
+                  required: true,
+                  label: { en: "Value", fr: "Valeur", pl: "Wartość" },
+                },
+              ],
+            },
+            {
+              name: "regulatoryDocuments",
+              type: "relationship",
+              relationTo: "media",
+              hasMany: true,
+              label: { en: "Technical and regulatory documents", fr: "Documents techniques et réglementaires", pl: "Dokumenty techniczne i regulacyjne" },
+              admin: { description: { en: "Attach only documents actually supplied and checked; never imply certification without evidence.", fr: "Joindre uniquement les documents réellement reçus et vérifiés ; ne jamais déclarer une certification sans justificatif.", pl: "Dołączaj wyłącznie otrzymane i sprawdzone dokumenty; nie deklaruj certyfikacji bez dowodu." } },
+            },
+            {
               name: "categoriesArr",
               label: {
                 en: "Product categories",

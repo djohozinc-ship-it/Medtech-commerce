@@ -22,7 +22,26 @@
     "additional-details": "Additional details",
     "add-to-favs": "Add to favorites",
     "stock-left": "Stock left:",
-    "maximum-stock": "You already have maximum stock of this item in your cart."
+    "maximum-stock": "You already have maximum stock of this item in your cart.",
+    "technical-sheet": "Technical sheet",
+    "manufacturer": "Manufacturer",
+    "brand": "Brand",
+    "model-reference": "Model / reference",
+    "origin-country": "Country of origin",
+    "warranty": "Warranty",
+    "lead-time": "Estimated sourcing lead time",
+    "availability": "Availability",
+    "in-stock-confirm": "Stock to be confirmed before ordering",
+    "on-order": "Available on order",
+    "to-confirm": "To be confirmed",
+    "detailed-specs": "Detailed specifications",
+    "technical-notes": "Technical notes and compatibility",
+    "documents-available": "Available documents",
+    "verification-note": "The displayed specifications and documents are those supplied for this product reference. Verify compatibility, availability and applicable supporting documents before ordering.",
+    "quote": "Request a quote",
+    "month-unit": "months",
+    "day-unit": "days",
+    "document-label": "Technical document"
   },
   "ProductList": {
     "variants-singular": "variant",
@@ -144,6 +163,7 @@
       "ba": "Bosnia and Herzegovina",
       "be": "Belgium",
       "bg": "Bulgaria",
+      "bj": "Benin",
       "by": "Belarus",
       "ch": "Switzerland",
       "cy": "Cyprus",
@@ -230,7 +250,8 @@
       "orders": "Orders",
       "settings": "Settings",
       "orders-data": "Data for orders",
-      "help": "Help"
+      "help": "Help",
+      "sourcing": "Quote requests"
     },
     "orders": {
       "title": "Orders",

@@ -25,6 +25,8 @@ import { type ShopSetting } from "@/payload-types";
 import { type Currency } from "@/stores/Currency/types";
 import { formatPrice } from "@/utilities/formatPrices";
 
+import { FinanceOperationsPanel } from "../../FinanceOperationsPanel";
+import { FinanceSummaryPanel } from "../../FinanceSummaryPanel";
 import { OverviewCard } from "../../OverviewCard";
 import { OverviewChart } from "../../OverviewChart";
 import { OverviewLastOrders } from "../../OverviewLastOrders";
@@ -156,6 +158,8 @@ export const Overview = () => {
 
   return (
     <section className="flex flex-col gap-6">
+      <FinanceSummaryPanel />
+      <FinanceOperationsPanel />
       <div className="twp grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <OverviewCard
           label={t("adminDashboard:totalRevenue")}

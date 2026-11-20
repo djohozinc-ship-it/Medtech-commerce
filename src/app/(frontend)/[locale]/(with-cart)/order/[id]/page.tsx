@@ -1,6 +1,9 @@
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getPayload } from "payload";
 
+import { CustomerOrderPaymentPanel } from "@/components/(ecommerce)/CustomerOrderPaymentPanel";
+import { CustomerShipmentTracking } from "@/components/(ecommerce)/CustomerShipmentTracking";
 import { Media as MediaComponent } from "@/components/Media";
 import RichText from "@/components/RichText";
 import { type Locale } from "@/i18n/config";
@@ -8,6 +11,7 @@ import { Link } from "@/i18n/routing";
 import { type Media } from "@/payload-types";
 import config from "@/payload.config";
 import { formatPrice } from "@/utilities/formatPrices";
+import { getCustomer } from "@/utilities/getCustomer";
 import { getCachedGlobal } from "@/utilities/getGlobals";
 import { getOrderProducts } from "@/utilities/getOrderProducts";
 
@@ -19,6 +23,12 @@ const OrdersPage = async ({ params }: { params: Promise<{ locale: Locale; id: st
     id,
     locale,
   });
+
+  const customer = await getCustomer();
+  const orderCustomerId = typeof order.customer === "string" ? order.customer : order.customer?.id;
+  if (!customer || !orderCustomerId || String(customer.id) !== String(orderCustomerId)) {
+    notFound();
+  }
 
   const t = await getTranslations("Order");
   const c = await getTranslations("CheckoutForm.countries");
@@ -57,7 +67,6 @@ const OrdersPage = async ({ params }: { params: Promise<{ locale: Locale; id: st
               (variant) => variant.variantSlug === product.variantSlug,
             );
 
-            console.log(selectedVariant);
             const productImage =
               product.variants && product.variantSlug
                 ? ((product.variants.find((variant) => product.variantSlug === variant.variantSlug)?.image ??
@@ -76,11 +85,15 @@ const OrdersPage = async ({ params }: { params: Promise<{ locale: Locale; id: st
                 <div className="flex flex-auto flex-col">
                   <div>
                     <h4 className="font-medium text-gray-900">
-                      <Link
-                        href={`/product/${product.slug}${product.variants && selectedVariant && `?variant=${selectedVariant.variantSlug}`}`}
-                      >
-                        {product.title}
-                      </Link>
+                      {product.slug ? (
+                        <Link
+                          href={`/product/${product.slug}${product.variants && selectedVariant && `?variant=${selectedVariant.variantSlug}`}`}
+                        >
+                          {product.title}
+                        </Link>
+                      ) : (
+                        <span>{product.title}</span>
+                      )}
                     </h4>
                     <p className="mt-2 text-sm text-gray-500">
                       {product.colors?.find((color) => color.slug === selectedVariant?.color)?.label}
@@ -179,6 +192,12 @@ const OrdersPage = async ({ params }: { params: Promise<{ locale: Locale; id: st
                 </dd>
               </div>
             </dl>
+            {customer && orderCustomerId && (
+              <>
+                <CustomerOrderPaymentPanel orderId={String(order.id)} />
+                <CustomerShipmentTracking orderId={String(order.id)} />
+              </>
+            )}
           </div>
         </div>
       </div>

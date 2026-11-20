@@ -1,8 +1,12 @@
 import { type CollectionConfig } from "payload";
 
 import { getChartData } from "@/endpoints/adminDashboard/getChartData";
+import { getFinanceOperations } from "@/endpoints/adminDashboard/getFinanceOperations";
+import { getFinanceSummary } from "@/endpoints/adminDashboard/getFinanceSummary";
 import { getOrderCount } from "@/endpoints/adminDashboard/getOrderCount";
 import { getRevenue } from "@/endpoints/adminDashboard/getRevenue";
+import { getCustomerShipmentTracking } from "@/endpoints/orders/getCustomerShipmentTracking";
+import { createFedaPayPayment, fedapayReturn, fedapayWebhook, getCustomerOrderBalance } from "@/endpoints/payments/fedapay";
 import { currencyField } from "@/fields/currencyField";
 import { countryList } from "@/globals/(ecommerce)/Couriers/utils/countryList";
 import { courierSelectOptions } from "@/globals/(ecommerce)/Couriers/utils/couriersConfig";
@@ -13,6 +17,23 @@ import { sendStatusEmail } from "./hooks/sendStatusEmail";
 
 export const Orders: CollectionConfig = {
   slug: "orders",
+  access: {
+    // Les commandes sont créées uniquement par le serveur après recalcul du panier.
+    create: () => false,
+    read: ({ req }) => {
+      if (req.user?.collection === "administrators") return true;
+      if (req.user?.collection === "customers") {
+        return {
+          customer: {
+            equals: req.user.id,
+          },
+        };
+      }
+      return false;
+    },
+    update: ({ req }) => req.user?.collection === "administrators",
+    delete: ({ req }) => req.user?.collection === "administrators",
+  },
   admin: {
     useAsTitle: "id",
     group: {
@@ -35,6 +56,41 @@ export const Orders: CollectionConfig = {
   },
   endpoints: [
     {
+      path: "/shipment-tracking",
+      method: "get",
+      handler: getCustomerShipmentTracking,
+    },
+    {
+      path: "/order-balance",
+      method: "get",
+      handler: getCustomerOrderBalance,
+    },
+    {
+      path: "/create-fedapay-payment",
+      method: "post",
+      handler: createFedaPayPayment,
+    },
+    {
+      path: "/fedapay-return",
+      method: "get",
+      handler: fedapayReturn,
+    },
+    {
+      path: "/fedapay-webhook",
+      method: "post",
+      handler: fedapayWebhook,
+    },
+    {
+      path: "/finance-operations",
+      method: "get",
+      handler: getFinanceOperations,
+    },
+    {
+      path: "/finance-summary",
+      method: "post",
+      handler: getFinanceSummary,
+    },
+    {
       path: "/revenue",
       method: "post",
       handler: getRevenue,
@@ -51,6 +107,14 @@ export const Orders: CollectionConfig = {
     },
   ],
   fields: [
+    {
+      name: "sourcingRequest",
+      type: "relationship",
+      relationTo: "sourcing-requests",
+      label: "Demande de sourcing d'origine",
+      admin: { hidden: true, readOnly: true },
+      index: true,
+    },
     {
       name: "id",
       type: "text",
@@ -297,12 +361,14 @@ export const Orders: CollectionConfig = {
                     },
                     {
                       name: "country",
-                      type: "select",
+                      type: "text",
                       label: {
                         en: "Country",
                         pl: "Kraj",
                       },
-                      options: [...countryList],
+                      validate: (value) =>
+                        countryList.some((country) => country.value === value) ||
+                        "Select a supported country.",
                       admin: {
                         width: "50%",
                       },
@@ -504,12 +570,14 @@ export const Orders: CollectionConfig = {
                     },
                     {
                       name: "country",
-                      type: "select",
+                      type: "text",
                       label: {
                         en: "Country",
                         pl: "Kraj",
                       },
-                      options: [...countryList],
+                      validate: (value) =>
+                        countryList.some((country) => country.value === value) ||
+                        "Select a supported country.",
                       admin: {
                         width: "50%",
                       },

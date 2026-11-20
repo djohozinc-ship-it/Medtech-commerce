@@ -1,0 +1,295 @@
+import { type Access, type CollectionConfig } from "payload";
+
+const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
+
+export const CashTransactions: CollectionConfig<"cash-transactions"> = {
+  slug: "cash-transactions",
+  labels: { singular: "Mouvement financier", plural: "Journal financier" },
+  admin: {
+    useAsTitle: "transactionReference",
+    defaultColumns: ["transactionReference", "transactionType", "amount", "currency", "status", "transactionDate"],
+    group: "Finance et coûts",
+    description: "Journal des encaissements, paiements fournisseurs, dépenses et remboursements. Une ligne confirmée doit être justifiée.",
+  },
+  access: {
+    create: administratorsOnly,
+    read: administratorsOnly,
+    update: administratorsOnly,
+    delete: administratorsOnly,
+  },
+  fields: [
+    { name: "transactionReference", type: "text", required: true, unique: true, index: true, label: "Référence du mouvement" },
+    {
+      name: "transactionType",
+      type: "select",
+      required: true,
+      options: [
+        { label: "Paiement reçu d'un client", value: "customer_payment" },
+        { label: "Paiement à un fournisseur", value: "supplier_payment" },
+        { label: "Fret et transport", value: "freight_expense" },
+        { label: "Douane et taxes", value: "customs_expense" },
+        { label: "Manutention / entreposage", value: "handling_expense" },
+        { label: "Livraison locale", value: "local_delivery_expense" },
+        { label: "Autre dépense opérationnelle", value: "operating_expense" },
+        { label: "Remboursement client", value: "customer_refund" },
+        { label: "Autre mouvement", value: "other" },
+      ],
+      label: "Nature du mouvement",
+    },
+    {
+      name: "status",
+      type: "select",
+      required: true,
+      defaultValue: "pending",
+      options: [
+        { label: "En attente de confirmation", value: "pending" },
+        { label: "Confirmé / exécuté", value: "confirmed" },
+        { label: "Échoué", value: "failed" },
+        { label: "Annulé", value: "cancelled" },
+      ],
+      label: "Statut",
+    },
+    { name: "amount", type: "number", required: true, min: 0.01, label: "Montant" },
+    {
+      name: "currency",
+      type: "select",
+      required: true,
+      defaultValue: "XOF",
+      options: [
+        { label: "Franc CFA BCEAO (XOF)", value: "XOF" },
+        { label: "Yuan chinois (CNY)", value: "CNY" },
+        { label: "Dollar américain (USD)", value: "USD" },
+        { label: "Euro (EUR)", value: "EUR" },
+      ],
+      label: "Devise",
+    },
+    { name: "transactionDate", type: "date", required: true, defaultValue: () => new Date().toISOString(), label: "Date du mouvement" },
+    {
+      name: "paymentMethod",
+      type: "select",
+      options: [
+        { label: "Espèces", value: "cash" },
+        { label: "Virement bancaire", value: "bank_transfer" },
+        { label: "Mobile Money — saisie manuelle", value: "mobile_money_manual" },
+        { label: "Mobile Money — passerelle FedaPay", value: "mobile_money_gateway" },
+        { label: "Carte — saisie manuelle", value: "card_manual" },
+        { label: "Paiement via plateforme fournisseur", value: "supplier_platform" },
+        { label: "Autre / à préciser", value: "other" },
+      ],
+      label: "Moyen de paiement",
+      admin: { description: "La sélection Mobile Money permet uniquement d'enregistrer un paiement vérifié manuellement. Elle ne déclenche aucun paiement opérateur." },
+    },
+    { name: "paymentProvider", type: "text", label: "Opérateur / banque / plateforme" },
+    { name: "providerTransactionId", type: "text", label: "Référence de transaction opérateur" },
+    { name: "customer", type: "relationship", relationTo: "customers", label: "Client concerné" },
+    { name: "order", type: "relationship", relationTo: "orders", label: "Commande concernée" },
+    { name: "supplier", type: "relationship", relationTo: "suppliers", label: "Fournisseur concerné" },
+    { name: "purchaseOrder", type: "relationship", relationTo: "purchase-orders", label: "Bon de commande fournisseur concerné" },
+    { name: "purchasePaymentStage", type: "select", options: [{ label: "Acompte", value: "deposit" }, { label: "Paiement intermédiaire", value: "installment" }, { label: "Solde", value: "balance" }, { label: "Paiement intégral", value: "full" }], label: "Étape du paiement fournisseur" },
+    { name: "purchaseOrderExchangeRate", type: "number", min: 0.000001, label: "Taux vers la devise du bon de commande" },
+    { name: "amountInPurchaseOrderCurrency", type: "number", admin: { readOnly: true }, label: "Montant converti dans la devise du bon" },
+    { name: "supplierOffer", type: "relationship", relationTo: "supplier-offers", label: "Offre fournisseur concernée" },
+    { name: "shipment", type: "relationship", relationTo: "inbound-shipments", label: "Expédition concernée" },
+    {
+      name: "expenseCategory",
+      type: "select",
+      options: [
+        { label: "Achat de marchandises", value: "goods_purchase" },
+        { label: "Transport intérieur Chine", value: "china_transport" },
+        { label: "Fret international", value: "international_freight" },
+        { label: "Assurance", value: "insurance" },
+        { label: "Douane et taxes", value: "customs" },
+        { label: "Stockage et manutention", value: "warehousing" },
+        { label: "Livraison locale", value: "last_mile" },
+        { label: "Frais bancaires / paiement", value: "payment_fees" },
+        { label: "Marketing", value: "marketing" },
+        { label: "Autre", value: "other" },
+      ],
+      label: "Catégorie de dépense",
+    },
+    { name: "proofDocuments", type: "relationship", relationTo: "media", hasMany: true, label: "Reçus, factures et justificatifs" },
+    { name: "confirmedBy", type: "text", label: "Confirmé par" },
+    { name: "confirmationNotes", type: "textarea", label: "Notes de vérification" },
+    { name: "internalNotes", type: "textarea", label: "Notes internes" },
+  ],
+  hooks: {
+    beforeValidate: [
+      async ({ data, originalDoc, operation, req }) => {
+        if (!data) return data;
+        if (operation === "create" && !data.transactionReference) {
+          const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+          data.transactionReference = `FIN-${stamp}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+        }
+        const transactionType = data.transactionType ?? originalDoc?.transactionType;
+        const purchaseOrderValue = data.purchaseOrder ?? originalDoc?.purchaseOrder;
+        const purchaseOrderId = typeof purchaseOrderValue === "object" ? purchaseOrderValue?.id : purchaseOrderValue;
+        if (transactionType === "customer_payment" && (data.status ?? originalDoc?.status) === "confirmed") {
+          const customerValue = data.customer ?? originalDoc?.customer;
+          const customerId = typeof customerValue === "object" && customerValue ? String(customerValue.id ?? "") : String(customerValue ?? "");
+          const orderValue = data.order ?? originalDoc?.order;
+          const orderId = typeof orderValue === "object" && orderValue ? String(orderValue.id ?? "") : String(orderValue ?? "");
+          const proof = data.proofDocuments ?? originalDoc?.proofDocuments;
+          const providerReference = data.providerTransactionId ?? originalDoc?.providerTransactionId;
+          const confirmedBy = data.confirmedBy ?? originalDoc?.confirmedBy;
+          if (!customerId || !orderId) throw new Error("Un encaissement client confirmé doit être lié à un client et à une commande.");
+          if ((!Array.isArray(proof) || proof.length === 0) && !providerReference) throw new Error("Justificatif ou référence de transaction obligatoire pour confirmer l'encaissement.");
+          if (!confirmedBy) throw new Error("Indiquez la personne ou le système ayant vérifié l'encaissement.");
+          const order = await req.payload.findByID({ collection: "orders", id: orderId, depth: 0, overrideAccess: true });
+          const orderCustomerId = typeof order.customer === "object" && order.customer ? String(order.customer.id ?? "") : String(order.customer ?? "");
+          if (orderCustomerId !== customerId) throw new Error("Le client de l'encaissement ne correspond pas au client de la commande.");
+          if (String(order.orderDetails?.currency ?? "") !== String(data.currency ?? originalDoc?.currency ?? "")) throw new Error("La devise de l'encaissement doit correspondre à celle de la commande.");
+        }
+        if (transactionType === "customer_refund" && (data.status ?? originalDoc?.status) === "confirmed") {
+          const customerValue = data.customer ?? originalDoc?.customer;
+          const customerId = typeof customerValue === "object" && customerValue ? String(customerValue.id ?? "") : String(customerValue ?? "");
+          const orderValue = data.order ?? originalDoc?.order;
+          const orderId = typeof orderValue === "object" && orderValue ? String(orderValue.id ?? "") : String(orderValue ?? "");
+          const proof = data.proofDocuments ?? originalDoc?.proofDocuments;
+          const providerReference = data.providerTransactionId ?? originalDoc?.providerTransactionId;
+          const confirmedBy = data.confirmedBy ?? originalDoc?.confirmedBy;
+          const refundAmount = Number(data.amount ?? originalDoc?.amount);
+          if (!customerId || !orderId) throw new Error("Un remboursement confirmé doit être lié au client et à la commande concernés.");
+          if ((!Array.isArray(proof) || proof.length === 0) && !providerReference) throw new Error("Justificatif ou référence de remboursement obligatoire.");
+          if (!confirmedBy) throw new Error("Indiquez la personne ayant vérifié le remboursement.");
+          const order = await req.payload.findByID({ collection: "orders", id: orderId, depth: 0, overrideAccess: true });
+          const orderCustomerId = typeof order.customer === "object" && order.customer ? String(order.customer.id ?? "") : String(order.customer ?? "");
+          if (orderCustomerId !== customerId) throw new Error("Le client du remboursement ne correspond pas au client de la commande.");
+          if (String(order.orderDetails?.currency ?? "") !== String(data.currency ?? originalDoc?.currency ?? "")) throw new Error("La devise du remboursement doit correspondre à celle de la commande.");
+          if (!Number.isFinite(refundAmount) || refundAmount <= 0) throw new Error("Montant de remboursement invalide.");
+          const existing = await req.payload.find({
+            collection: "cash-transactions",
+            where: { and: [
+              { order: { equals: orderId } },
+              { transactionType: { equals: "customer_refund" } },
+              { status: { equals: "confirmed" } },
+            ] },
+            limit: 10000, pagination: false, depth: 0, overrideAccess: true,
+          });
+          const currentId = originalDoc?.id ? String(originalDoc.id) : "";
+          const refunded = existing.docs.reduce((sum, item) => String(item.id) === currentId ? sum : sum + Number(item.amount ?? 0), 0);
+          const payments = await req.payload.find({
+            collection: "cash-transactions",
+            where: { and: [
+              { order: { equals: orderId } },
+              { transactionType: { equals: "customer_payment" } },
+              { status: { equals: "confirmed" } },
+              { currency: { equals: data.currency ?? originalDoc?.currency } },
+            ] },
+            limit: 10000, pagination: false, depth: 0, overrideAccess: true,
+          });
+          const received = payments.docs.reduce((sum, item) => sum + Number(item.amount ?? 0), 0);
+          if (refunded + refundAmount > received + 0.01) throw new Error("Le remboursement cumulé dépasse les paiements client confirmés.");
+        }
+        if (transactionType === "supplier_payment" && !purchaseOrderId) throw new Error("Un paiement fournisseur doit être lié à un bon de commande.");
+        if (transactionType === "supplier_payment" && (data.status ?? originalDoc?.status) === "confirmed") {
+          const proof = data.proofDocuments ?? originalDoc?.proofDocuments;
+          const providerReference = data.providerTransactionId ?? originalDoc?.providerTransactionId;
+          const confirmedBy = data.confirmedBy ?? originalDoc?.confirmedBy;
+          if ((!Array.isArray(proof) || proof.length === 0) && !providerReference) {
+            throw new Error("Joignez un justificatif de paiement ou renseignez la référence bancaire / opérateur avant confirmation.");
+          }
+          if (!confirmedBy) throw new Error("Indiquez la personne qui a vérifié le paiement fournisseur.");
+        }
+        if (transactionType === "supplier_payment" && purchaseOrderId) {
+          const payload = req.payload;
+          const purchaseOrder = await payload.findByID({
+            collection: "purchase-orders",
+            id: purchaseOrderId,
+            depth: 0,
+            overrideAccess: true,
+          });
+          const paymentSupplierValue = data.supplier ?? originalDoc?.supplier;
+          const paymentSupplierId = typeof paymentSupplierValue === "object" && paymentSupplierValue ? paymentSupplierValue.id : paymentSupplierValue;
+          const orderSupplierId = typeof purchaseOrder.supplier === "object" && purchaseOrder.supplier ? purchaseOrder.supplier.id : purchaseOrder.supplier;
+          if (paymentSupplierId && String(paymentSupplierId) !== String(orderSupplierId)) {
+            throw new Error("Le fournisseur du paiement ne correspond pas au fournisseur du bon de commande.");
+          }
+          data.supplier = orderSupplierId;
+          if (!["approved", "sent_to_supplier", "acknowledged", "partially_received", "received"].includes(String(purchaseOrder.status))) {
+            throw new Error("Le bon de commande doit être approuvé avant d'enregistrer un paiement fournisseur.");
+          }
+          const paymentCurrency = data.currency ?? originalDoc?.currency;
+          const amount = Number(data.amount ?? originalDoc?.amount);
+          const suppliedRate = Number(data.purchaseOrderExchangeRate ?? originalDoc?.purchaseOrderExchangeRate);
+          const rate = paymentCurrency === purchaseOrder.currency ? 1 : suppliedRate;
+          if (!Number.isFinite(amount) || amount <= 0 || !Number.isFinite(rate) || rate <= 0) {
+            throw new Error("Pour un paiement fournisseur lié à un bon, indiquez un montant valide et un taux de change si les devises diffèrent.");
+          }
+          data.purchaseOrderExchangeRate = rate;
+          data.amountInPurchaseOrderCurrency = Math.round(amount * rate * 100) / 100;
+          if ((data.status ?? originalDoc?.status) === "confirmed") {
+            const existing = await payload.find({
+              collection: "cash-transactions",
+              where: { and: [
+                { purchaseOrder: { equals: purchaseOrderId } },
+                { transactionType: { equals: "supplier_payment" } },
+                { status: { equals: "confirmed" } },
+              ] },
+              limit: 10000, depth: 0, overrideAccess: true,
+            });
+            const currentId = originalDoc?.id ? String(originalDoc.id) : "";
+            const alreadyPaid = existing.docs
+              .filter((item) => String(item.id) !== currentId)
+              .map((item) => Number(item.amountInPurchaseOrderCurrency ?? 0))
+              .reduce((sum, amount) => sum + amount, 0);
+            if (alreadyPaid + Number(data.amountInPurchaseOrderCurrency) > Number(purchaseOrder.totalAmount ?? 0) + 0.01) {
+              throw new Error("Ce paiement dépasserait le montant total du bon de commande. Vérifiez les paiements déjà confirmés.");
+            }
+          }
+        } else {
+          delete data.amountInPurchaseOrderCurrency;
+        }
+        return data;
+      },
+    ],
+    afterChange: [
+      async ({ doc, previousDoc, req }) => {
+        const payload = req.payload;
+        const relationId = (value: unknown): string => {
+          if (typeof value === "string" || typeof value === "number") return String(value);
+          if (typeof value !== "object" || value === null || !("id" in value)) return "";
+          const id = value.id;
+          return typeof id === "string" || typeof id === "number" ? String(id) : "";
+        };
+        const ids = [...new Set([relationId(doc.purchaseOrder), relationId(previousDoc?.purchaseOrder)].filter(Boolean))];
+        for (const purchaseOrderId of ids) {
+          const purchaseOrder = await payload.findByID({
+            collection: "purchase-orders",
+            id: purchaseOrderId,
+            depth: 0,
+            overrideAccess: true,
+          });
+          const payments = await payload.find({
+            collection: "cash-transactions",
+            where: {
+              and: [
+                { purchaseOrder: { equals: purchaseOrderId } },
+                { transactionType: { equals: "supplier_payment" } },
+                { status: { equals: "confirmed" } },
+              ],
+            },
+            limit: 10000,
+            depth: 0,
+            overrideAccess: true,
+          });
+          const paid = payments.docs
+            .map((payment) => Number(payment.amountInPurchaseOrderCurrency ?? 0))
+            .reduce((sum, amount) => sum + amount, 0);
+          const total = Number(purchaseOrder.totalAmount ?? 0);
+          await payload.update({
+            collection: "purchase-orders",
+            id: purchaseOrderId,
+            overrideAccess: true,
+            data: {
+              amountPaid: Math.round(paid * 100) / 100,
+              balanceDue: Math.max(0, Math.round((total - paid) * 100) / 100),
+              paymentStatus: paid <= 0 ? "unpaid" : paid + 0.01 >= total ? "paid" : "partially_paid",
+            },
+          });
+        }
+        return doc;
+      },
+    ],
+  },
+  timestamps: true,
+};

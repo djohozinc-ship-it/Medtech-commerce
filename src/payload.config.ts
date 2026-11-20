@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { mongooseAdapter } from "@payloadcms/db-mongodb";
 import { s3Storage } from "@payloadcms/storage-s3";
 import { en } from "@payloadcms/translations/languages/en";
+import { fr } from "@payloadcms/translations/languages/fr";
 import { pl } from "@payloadcms/translations/languages/pl";
 import { buildConfig } from "payload";
 import sharp from "sharp"; // sharp-import
@@ -18,10 +19,25 @@ import { ProductReviews } from "./collections/(ecommerce)/ProductReviews";
 import { ProductSubCategories } from "./collections/(ecommerce)/ProductSubCategories";
 import { Products } from "./collections/(ecommerce)/Products";
 import { Administrators } from "./collections/Administrators";
+import { CashTransactions } from "./collections/CashTransactions";
 import { Categories } from "./collections/Categories";
+import { GoodsReceipts } from "./collections/GoodsReceipts";
+import { InboundShipments } from "./collections/InboundShipments";
+import { LandedCostEstimates } from "./collections/LandedCostEstimates";
 import { Media } from "./collections/Media";
+import { OrderCostAllocations } from "./collections/OrderCostAllocations";
+import { OrderPaymentAllocations } from "./collections/OrderPaymentAllocations";
 import { Pages } from "./collections/Pages";
+import { PaymentAttempts } from "./collections/PaymentAttempts";
 import { Posts } from "./collections/Posts";
+import { PurchaseOrders } from "./collections/PurchaseOrders";
+import { ShipmentEvents } from "./collections/ShipmentEvents";
+import { SourcingAttachments } from "./collections/SourcingAttachments";
+import { SourcingRequests } from "./collections/SourcingRequests";
+import { SupplierOffers } from "./collections/SupplierOffers";
+import { Suppliers } from "./collections/Suppliers";
+import { WarehouseInspections } from "./collections/WarehouseInspections";
+import { Warehouses } from "./collections/Warehouses";
 import { InPostCourier } from "./globals/(ecommerce)/Couriers/InPostCourier/config";
 import { InPostCourierCOD } from "./globals/(ecommerce)/Couriers/InPostCourierCOD/config";
 import { InPostPickup } from "./globals/(ecommerce)/Couriers/InPostPickup/config";
@@ -99,13 +115,13 @@ export default buildConfig({
     },
   },
   i18n: {
-    supportedLanguages: { en, pl },
+    supportedLanguages: { fr, en, pl },
     fallbackLanguage: "en",
     translations: customTranslationsObject,
   },
   localization: {
-    locales: ["en", "pl"],
-    defaultLocale: "en",
+    locales: ["fr", "en", "pl"],
+    defaultLocale: "fr",
   },
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
@@ -124,6 +140,21 @@ export default buildConfig({
     ProductCategories,
     ProductSubCategories,
     ProductReviews,
+    ShipmentEvents,
+    SourcingRequests,
+    SourcingAttachments,
+    Suppliers,
+    SupplierOffers,
+    PurchaseOrders,
+    GoodsReceipts,
+    LandedCostEstimates,
+    Warehouses,
+    InboundShipments,
+    WarehouseInspections,
+    CashTransactions,
+    OrderCostAllocations,
+    OrderPaymentAllocations,
+    PaymentAttempts,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [

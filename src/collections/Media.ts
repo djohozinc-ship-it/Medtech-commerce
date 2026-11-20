@@ -3,10 +3,10 @@ import { fileURLToPath } from "url";
 
 import { FixedToolbarFeature, InlineToolbarFeature, lexicalEditor } from "@payloadcms/richtext-lexical";
 
-import { anyone } from "@/access/anyone";
-import { authenticated } from "@/access/authenticated";
 
 import type { CollectionConfig } from "payload";
+
+const administratorsOnly = ({ req }: { req: { user?: { collection?: string } | null } }) => req.user?.collection === "administrators";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -14,10 +14,10 @@ const dirname = path.dirname(filename);
 export const Media: CollectionConfig = {
   slug: "media",
   access: {
-    create: authenticated,
-    delete: authenticated,
-    read: anyone,
-    update: authenticated,
+    create: administratorsOnly,
+    delete: administratorsOnly,
+    read: () => true,
+    update: administratorsOnly,
   },
   labels: {
     singular: {
@@ -54,6 +54,7 @@ export const Media: CollectionConfig = {
     },
   ],
   upload: {
+    mimeTypes: ["image/jpeg", "image/png", "image/webp"],
     // Upload to the public/media directory in Next.js making them publicly accessible even outside of Payload
     staticDir: path.resolve(dirname, "../../public/media"),
     adminThumbnail: "thumbnail",

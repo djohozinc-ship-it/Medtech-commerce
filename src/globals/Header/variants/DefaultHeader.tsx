@@ -100,6 +100,7 @@ export const DefaultHeader = ({ data, disableCart }: { data: Header; disableCart
             {data.navItems?.map(({ link }, i) => {
               return <CMSLink key={i} {...link} appearance="link" className="text-black lg:text-white" />;
             })}
+            <Link href="/sourcing" className="text-black lg:text-white">Demander un devis</Link>
           </div>
         </nav>
         <div className="flex gap-5">

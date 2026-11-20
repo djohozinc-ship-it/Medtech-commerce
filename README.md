@@ -1,76 +1,53 @@
-# Payload Ecommerce Template
+# Medtech Commerce
 
-A modern ecommerce storefront powered by Payload and Next.js. This template provides all the essential features to build and manage a beautiful online store.
+Plateforme de commerce et d'approvisionnement de matériel biomédical, équipements hospitaliers, pièces détachées, outils de maintenance et produits technologiques, avec sourcing fournisseur et acheminement vers le Bénin.
 
-## 🌐 Live demo
+## Périmètre fonctionnel
 
-You can access the live demo of the template at [https://ecommerce.mandala.sh/en](https://ecommerce.mandala.sh/en).
+- Catalogue produits avec caractéristiques techniques, fabricant, modèle, garantie, disponibilité et mode de vente direct ou sur devis.
+- Demandes d'approvisionnement pour les produits absents du catalogue.
+- Référentiel privé des fournisseurs, offres, prix, délais et documents.
+- Simulations du coût rendu au Bénin : achat, transport intérieur Chine, fret international, assurance, douane, manutention et livraison locale.
+- Gestion des entrepôts, expéditions, contrôles à réception et événements de suivi client.
+- Comptes clients, commandes et journal financier.
+- Rapprochement des encaissements et calcul du solde des commandes.
+- Tableau de bord financier avec distinction entre encaissements, coûts affectés et indicateurs incomplets.
+- Préparation de l'intégration FedaPay pour les paiements XOF. Le mode live ne doit être activé qu'après validation du compte marchand, des clés et des tests de bout en bout.
 
-## ✨ Features
+## Stack
 
-- **Modern Storefront**: A beautiful and fast storefront built with Next.js and Tailwind CSS.
-- **Powerful Admin Panel**: Manage your products, orders, and customers with the powerful Payload admin UI.
-- **Product Management**: Easily add and manage products with variants (size, color, etc.).
-- **Shopping Cart & Checkout**: A complete and secure checkout flow.
-- **User Accounts**: Customers can create accounts to view their order history and manage their profiles.
-- **SEO Friendly**: Pre-configured for search engine optimization.
-- **Multi-language**: Supports multiple languages out of the box.
-- **Payments and Shipping**: Supports payments and shipping out of the box.
-- **Customizable**: Easily extend and customize the design and functionality to fit your brand.
+- Next.js 15
+- Payload CMS 3
+- MongoDB
+- Stockage média compatible S3
 
-## 📸 Screenshots
+## Configuration
 
-- **Example storefront**
-  ![Example storefront](./public/storefront.png)
+1. Utiliser Node.js 20.9+ et pnpm.
+2. Copier `.env.example` vers `.env`.
+3. Renseigner une base MongoDB dédiée, un secret Payload fort et les identifiants du stockage média.
+4. Laisser FedaPay en sandbox tant que le compte marchand n'est pas activé.
+5. Installer les dépendances avec `pnpm install`.
+6. Générer les types Payload si nécessaire : `pnpm payload generate:types`.
+7. Lancer localement : `pnpm dev`.
+8. Vérifier la compilation de production : `pnpm build`.
 
-- **Admin panel Dashboard**
-  ![Admin panel Dashboard](./public/admin-dashboard.png)
+## Variables sensibles
 
-## 🚀 Getting Started
+Ne jamais committer `.env`, les clés privées, les mots de passe, les tokens ni les documents d'identité. Les secrets de production doivent être enregistrés dans le gestionnaire de secrets de l'hébergeur.
 
-Follow these steps to get your ecommerce store up and running on your local machine.
+## Règles métier importantes
 
-### Installation & Setup
+- Un prix fournisseur ou un coût logistique estimé n'est pas un coût réel payé : conserver les justificatifs et confirmer les mouvements.
+- Une commande sur devis ne doit pas être présentée comme disponible en stock sans confirmation.
+- Le bénéfice net ne peut être certifié que si tous les coûts, frais, remboursements, conversions de devises et charges pertinentes sont correctement enregistrés.
+- Les événements de suivi visibles au client doivent correspondre à des étapes réellement confirmées.
+- Les paiements ne sont confirmés qu'après vérification serveur auprès du prestataire.
 
-1.  **Clone the repository:**
+## État de préparation
 
-    ```bash
-    git clone https://github.com/Mandala-Software-House/payload-ecommerce-template.git
-    cd payload-ecommerce
-    ```
+Le dépôt contient les modules métier décrits ci-dessus, mais leur présence dans le code ne constitue pas une validation de production. La compilation, les tests automatisés, les tests d'intégration, la configuration des secrets, la vérification des webhooks et les essais réels en environnement sandbox doivent être effectués avant ouverture commerciale.
 
-2.  **Install dependencies:**
+## Branche de travail
 
-    ```bash
-    pnpm install
-    ```
-
-3.  **Set up environment variables:**
-
-    Copy the example environment file. If `.env.example` does not exist, create a new file named `.env`.
-
-    ```bash
-    cp .env.example .env
-    ```
-
-    Now, open the `.env` file and fill in the required variables, especially your `MONGODB_URI` and `PAYLOAD_SECRET`.
-
-4.  **Run the development server:**
-
-    ```bash
-    pnpm dev
-    ```
-
-5.  **Access your store:**
-    - Your website will be available at [http://localhost:3000](http://localhost:3000)
-    - The Payload admin panel will be at [http://localhost:3000/admin](http://localhost:3000/admin)
-
-    When you first visit the admin panel, you will be prompted to create your first admin user.
-
-## Usage
-
-- **Managing Products**: Go to the `/admin` panel, navigate to the 'Products' collection to add, edit, or remove products.
-- **Viewing Orders**: Customer orders will appear in the 'Orders' collection in the admin panel.
-- **Customizing Pages**: You can edit pages like 'About Us' or create new ones using the 'Pages' collection.
-
-Feel free to explore the admin panel to discover all the features!
+Les adaptations métier sont développées sur `feature/benin-commerce-adaptation`. Ne pas fusionner dans `main` avant revue et validation.

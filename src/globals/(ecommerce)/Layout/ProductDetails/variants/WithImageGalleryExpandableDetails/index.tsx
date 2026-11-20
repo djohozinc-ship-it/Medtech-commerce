@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { PriceClient } from "@/components/(ecommerce)/PriceClient";
 import { Media } from "@/components/Media";
 import RichText from "@/components/RichText";
-import { type Product, type ShopLayout } from "@/payload-types";
+import { type Media as MediaDocument, type Product, type ShopLayout } from "@/payload-types";
 import { type Currency } from "@/stores/Currency/types";
 import { cn } from "@/utilities/cn";
 
@@ -14,6 +14,107 @@ import { ProductForm } from "./components/ProductForm";
 import { ProductGallery } from "./components/ProductGallery";
 
 import { type FilledVariant } from "../../types";
+
+type MedtechProduct = Product & {
+  commercialType?: string | null;
+  salesMode?: string | null;
+  manufacturer?: string | null;
+  brand?: string | null;
+  modelReference?: string | null;
+  originCountry?: string | null;
+  warrantyMonths?: number | null;
+  leadTimeDays?: number | null;
+  availabilityMode?: string | null;
+  technicalSpecifications?: string | null;
+  technicalSpecs?: { id?: string | null; label: string; value: string }[] | null;
+  regulatoryDocuments?: (string | MediaDocument)[] | null;
+};
+
+const hasValue = (value: string | number | null | undefined): value is string | number =>
+  value !== null && value !== undefined && String(value).trim() !== "";
+
+const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
+  const t = useTranslations("ProductDetails");
+  const rows = ([
+    [t("manufacturer"), product.manufacturer],
+    [t("brand"), product.brand],
+    [t("model-reference"), product.modelReference],
+    [t("origin-country"), product.originCountry],
+    [t("warranty"), hasValue(product.warrantyMonths) ? `${product.warrantyMonths} ${t("month-unit")}` : null],
+    [t("lead-time"), hasValue(product.leadTimeDays) ? `${product.leadTimeDays} ${t("day-unit")}` : null],
+    [t("availability"), product.availabilityMode === "in_stock" ? t("in-stock-confirm") : product.availabilityMode === "on_order" ? t("on-order") : product.availabilityMode === "to_confirm" ? t("to-confirm") : null],
+  ] as [string, string | number | null | undefined][]).reduce<[string, string | number][]>((result, [label, value]) => {
+    if (hasValue(value)) result.push([label, value]);
+    return result;
+  }, []);
+
+  const documents = (product.regulatoryDocuments ?? []).filter(
+    (document): document is MediaDocument =>
+      typeof document !== "string" && Boolean(document.url),
+  );
+
+  if (!rows.length && !product.technicalSpecifications && !product.technicalSpecs?.length && !documents.length) {
+    return null;
+  }
+
+  return (
+    <section className="mt-10 rounded-xl border border-gray-200 p-5" aria-labelledby="technical-sheet-title">
+      <h2 id="technical-sheet-title" className="text-xl font-semibold text-gray-900">{t("technical-sheet")}</h2>
+      {rows.length > 0 && (
+        <dl className="mt-4 divide-y divide-gray-100">
+          {rows.map(([label, value]) => (
+            <div key={label} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-2">
+              <dt className="text-sm font-medium text-gray-600">{label}</dt>
+              <dd className="text-sm text-gray-900">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {product.technicalSpecs && product.technicalSpecs.length > 0 && (
+        <div className="mt-5">
+          <h3 className="font-semibold text-gray-900">{t("detailed-specs")}</h3>
+          <dl className="mt-2 divide-y divide-gray-100">
+            {product.technicalSpecs.map((spec, index) => (
+              <div key={spec.id ?? `${spec.label}-${index}`} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-2">
+                <dt className="text-sm font-medium text-gray-600">{spec.label}</dt>
+                <dd className="text-sm text-gray-900">{spec.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+      {product.technicalSpecifications && (
+        <div className="mt-5">
+          <h3 className="font-semibold text-gray-900">{t("technical-notes")}</h3>
+          <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-700">{product.technicalSpecifications}</p>
+        </div>
+      )}
+      {documents.length > 0 && (
+        <div className="mt-5">
+          <h3 className="font-semibold text-gray-900">{t("documents-available")}</h3>
+          <ul className="mt-2 space-y-2">
+            {documents.map((document, index) => (
+              <li key={document.id ?? document.url ?? index}>
+                <a
+                  href={document.url ?? "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm font-medium text-main-700 underline underline-offset-2"
+                >
+                  {document.alt ?? document.filename ?? `${t("document-label")} ${index + 1}`}
+                </a>
+                {document.mimeType === "application/pdf" && <span className="ml-2 text-xs text-gray-500">PDF</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <p className="mt-5 text-xs leading-5 text-gray-500">
+        {t("verification-note")}
+      </p>
+    </section>
+  );
+};
 
 export const WithImageGalleryExpandableDetails = ({
   variant,
@@ -24,6 +125,7 @@ export const WithImageGalleryExpandableDetails = ({
   product: Product;
   productSettings: ShopLayout["productDetails"];
 }) => {
+  const medtechProduct = product as MedtechProduct;
   const filledVariants: FilledVariant[] | undefined = product.variants?.map((variant) => ({
     color: product.colors?.find((color) => {
       return color.slug === variant.color;
@@ -93,21 +195,23 @@ export const WithImageGalleryExpandableDetails = ({
           <div className="mt-10 px-4 sm:mt-16 sm:px-0 lg:mt-0">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">{product.title}</h1>
 
-            <div className="mt-3">
-              <h2 className="sr-only">{t("product-info")}</h2>
-              <p className="text-3xl tracking-tight text-gray-900">
-                <PriceClient
-                  pricing={
-                    (product.enableVariants &&
-                    product.enableVariantPrices &&
-                    product.variants &&
-                    selectedVariant
-                      ? selectedVariant.pricing
-                      : product.pricing) ?? []
-                  }
-                />
-              </p>
-            </div>
+            {medtechProduct.salesMode !== "quote" && (
+              <div className="mt-3">
+                <h2 className="sr-only">{t("product-info")}</h2>
+                <p className="text-3xl tracking-tight text-gray-900">
+                  <PriceClient
+                    pricing={
+                      (product.enableVariants &&
+                      product.enableVariantPrices &&
+                      product.variants &&
+                      selectedVariant
+                        ? selectedVariant.pricing
+                        : product.pricing) ?? []
+                    }
+                  />
+                </p>
+              </div>
+            )}
 
             {productSettings.reviewsEnabled && (
               <>
@@ -140,6 +244,8 @@ export const WithImageGalleryExpandableDetails = ({
                 <RichText className="space-y-6 text-base text-gray-700" data={product.description} />
               </div>
             )}
+
+            <TechnicalSheet product={medtechProduct} />
 
             <ProductForm
               product={product}

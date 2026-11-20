@@ -1,9 +1,17 @@
 import { type CollectionConfig } from "payload";
 
+import { anyone } from "@/access/anyone";
+import { authenticated } from "@/access/authenticated";
 import { slugField } from "@/fields/slug";
 
 export const ProductSubCategories: CollectionConfig = {
   slug: "productSubCategories",
+  access: {
+    create: authenticated,
+    read: anyone,
+    update: authenticated,
+    delete: authenticated,
+  },
   admin: {
     useAsTitle: "title",
     group: {
@@ -14,10 +22,12 @@ export const ProductSubCategories: CollectionConfig = {
   labels: {
     singular: {
       en: "Product Subcategory",
+      fr: "Sous-catégorie de produits",
       pl: "Podkategoria produktu",
     },
     plural: {
       en: "Product Subcategories",
+      fr: "Sous-catégories de produits",
       pl: "Podkategorie produktów",
     },
   },

@@ -76,7 +76,7 @@ export const CheckoutForm = ({ user, geowidgetToken }: { user?: Customer; geowid
         name: defaultShippingAddress?.name ?? "",
         address: defaultShippingAddress?.address ?? "",
         city: defaultShippingAddress?.city ?? "",
-        country: defaultShippingAddress?.country ?? "pl",
+        country: defaultShippingAddress?.country ?? "bj",
         region: defaultShippingAddress?.region ?? "",
         postalCode: defaultShippingAddress?.postalCode ?? "",
         phone: defaultShippingAddress?.phone ?? "",
@@ -336,6 +336,7 @@ export const CheckoutForm = ({ user, geowidgetToken }: { user?: Customer; geowid
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
+                                <SelectItem value="bj">{c("bj")}</SelectItem>
                                 <SelectItem value="pl">{c("pl")}</SelectItem>
                                 <SelectItem value="gb">{c("gb")}</SelectItem>
                                 <SelectItem value="us">{c("us")}</SelectItem>

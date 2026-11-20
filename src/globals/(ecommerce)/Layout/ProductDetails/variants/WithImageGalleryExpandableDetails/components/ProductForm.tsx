@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { QuantityInput } from "@/components/(ecommerce)/QuantityInput";
-import { useRouter } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { type Product } from "@/payload-types";
 import { useCart } from "@/stores/CartStore";
 import { useWishList } from "@/stores/WishlistStore";
@@ -29,6 +29,9 @@ export const ProductForm = ({
   minQuantity: number;
   maxQuantity: number;
 }) => {
+  const medtechProduct = product as Product & { salesMode?: string | null };
+  const isQuoteOnly = medtechProduct.salesMode === "quote";
+  const quantityLimit = isQuoteOnly ? 999 : maxQuantity;
   const [quantity, setQuantity] = useState(1);
   const { updateCart, cart } = useCart();
 
@@ -45,7 +48,7 @@ export const ProductForm = ({
     setQuantity((prev) => {
       const newQty = prev + delta;
       // Clamp the quantity between min and max
-      return Math.min(Math.max(newQty, minQuantity), maxQuantity);
+      return Math.min(Math.max(newQty, minQuantity), quantityLimit);
     });
   };
 
@@ -188,35 +191,44 @@ export const ProductForm = ({
       )}
 
       <div className="mt-10 grid grid-cols-2 gap-y-4 sm:flex">
-        <button
-          type="submit"
-          disabled={!isProductAvailable}
-          className={cn(
-            "focus:outline-hidden col-span-2 row-start-2 flex max-w-xs flex-1 items-center justify-center rounded-md border border-transparent bg-main-600 px-8 py-3 text-base font-medium text-white hover:bg-main-700 focus:ring-2 focus:ring-main-500 focus:ring-offset-2 focus:ring-offset-gray-50 sm:w-full",
-            !isProductAvailable && "cursor-not-allowed opacity-25",
-          )}
-          onClick={(e) => {
-            e.preventDefault();
-            if (quantity <= maxQuantity - (cartItem?.quantity ?? 0)) {
-              setOverStock(false);
-              updateCart([
-                {
-                  id: product.id,
-                  quantity: quantity,
-                  choosenVariantSlug: selectedVariant?.slug ?? undefined,
-                },
-              ]);
-            } else {
-              setOverStock(true);
-            }
-          }}
-        >
-          {isProductAvailable ? t("add-to-cart") : t("product-unavailable")}
-        </button>
+        {isQuoteOnly ? (
+          <Link
+            href={`/sourcing?product=${encodeURIComponent(product.title)}&quantity=${quantity}`}
+            className="focus:outline-hidden col-span-2 row-start-2 flex max-w-xs flex-1 items-center justify-center rounded-md border border-transparent bg-main-600 px-8 py-3 text-base font-medium text-white hover:bg-main-700 focus:ring-2 focus:ring-main-500 focus:ring-offset-2 focus:ring-offset-gray-50 sm:w-full"
+          >
+            Demander un devis
+          </Link>
+        ) : (
+          <button
+            type="submit"
+            disabled={!isProductAvailable}
+            className={cn(
+              "focus:outline-hidden col-span-2 row-start-2 flex max-w-xs flex-1 items-center justify-center rounded-md border border-transparent bg-main-600 px-8 py-3 text-base font-medium text-white hover:bg-main-700 focus:ring-2 focus:ring-main-500 focus:ring-offset-2 focus:ring-offset-gray-50 sm:w-full",
+              !isProductAvailable && "cursor-not-allowed opacity-25",
+            )}
+            onClick={(e) => {
+              e.preventDefault();
+              if (quantity <= maxQuantity - (cartItem?.quantity ?? 0)) {
+                setOverStock(false);
+                updateCart([
+                  {
+                    id: product.id,
+                    quantity: quantity,
+                    choosenVariantSlug: selectedVariant?.slug ?? undefined,
+                  },
+                ]);
+              } else {
+                setOverStock(true);
+              }
+            }}
+          >
+            {isProductAvailable ? t("add-to-cart") : t("product-unavailable")}
+          </button>
+        )}
 
         <div className="flex">
           <QuantityInput
-            maxQuantity={maxQuantity}
+            maxQuantity={quantityLimit}
             minQuantity={minQuantity}
             setQuantity={setQuantity}
             updateQuantity={updateQuantity}
@@ -249,7 +261,7 @@ export const ProductForm = ({
           </button>
         </div>
       </div>
-      {overStock && (
+      {!isQuoteOnly && overStock && (
         <p className="mt-4 text-red-500">
           {maxQuantity - (cartItem?.quantity ?? 0) > 0
             ? `${t("stock-left")} ${maxQuantity - (cartItem?.quantity ?? 0)}`

@@ -1,10 +1,10 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { CMSLink } from "@/components/Link";
 import { Logo } from "@/components/Logo/Logo";
 import { Media } from "@/components/Media";
+import { Link } from "@/i18n/routing";
 import { cn } from "@/utilities/cn";
 
 import type { Header } from "@/payload-types";
@@ -90,6 +90,7 @@ export const FloatingHeader = ({ data }: { data: Header }) => {
             {data.navItems?.map(({ link }, i) => {
               return <CMSLink key={i} {...link} appearance="link" className="text-black lg:text-white" />;
             })}
+            <Link href="/sourcing" className="text-black lg:text-white">Demander un devis</Link>
           </div>
         </nav>
         <CMSLink className="ml-auto hidden md:flex" />

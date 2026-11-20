@@ -1,6 +1,7 @@
 import { type CollectionConfig } from "payload";
 
 import { anyone } from "@/access/anyone";
+import { authenticated } from "@/access/authenticated";
 import { slugField } from "@/fields/slug";
 
 export const ProductCategories: CollectionConfig = {
@@ -15,15 +16,20 @@ export const ProductCategories: CollectionConfig = {
   labels: {
     singular: {
       en: "Product Category",
+      fr: "Catégorie de produits",
       pl: "Kateogria produktu",
     },
     plural: {
       en: "Product Categories",
+      fr: "Catégories de produits",
       pl: "Kategorie produktów",
     },
   },
   access: {
+    create: authenticated,
     read: anyone,
+    update: authenticated,
+    delete: authenticated,
   },
   fields: [
     {
