@@ -10,7 +10,7 @@ import type { Access, CollectionConfig } from "payload";
  */
 const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
 
-export const SourcingRequests: CollectionConfig = {
+export const SourcingRequests: CollectionConfig<"sourcing-requests"> = {
   slug: "sourcing-requests",
   labels: {
     singular: "Demande d'approvisionnement",
