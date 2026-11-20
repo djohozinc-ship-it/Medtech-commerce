@@ -8,11 +8,10 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { QuantityInput } from "@/components/(ecommerce)/QuantityInput";
-import { useRouter } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { type Product } from "@/payload-types";
 import { useCart } from "@/stores/CartStore";
 import { useWishList } from "@/stores/WishlistStore";
-import { Link } from "@/i18n/routing";
 import { cn } from "@/utilities/cn";
 
 import { type FilledVariant } from "../../../types";
