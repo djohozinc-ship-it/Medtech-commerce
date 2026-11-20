@@ -16,7 +16,7 @@ type PurchaseLine = {
 const numeric = (value: unknown): number | undefined =>
   typeof value === "number" && Number.isFinite(value) ? value : undefined;
 
-export const PurchaseOrders: CollectionConfig = {
+export const PurchaseOrders: CollectionConfig<"purchase-orders"> = {
   slug: "purchase-orders",
   labels: { singular: "Bon de commande fournisseur", plural: "Bons de commande fournisseurs" },
   admin: {
