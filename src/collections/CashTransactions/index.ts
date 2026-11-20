@@ -85,6 +85,8 @@ export const CashTransactions: CollectionConfig = {
     { name: "order", type: "relationship", relationTo: "orders", label: "Commande concernée" },
     { name: "supplier", type: "relationship", relationTo: "suppliers", label: "Fournisseur concerné" },
     { name: "purchaseOrder", type: "relationship", relationTo: "purchase-orders", label: "Bon de commande fournisseur concerné" },
+    { name: "purchaseOrderExchangeRate", type: "number", min: 0.000001, label: "Taux vers la devise du bon de commande" },
+    { name: "amountInPurchaseOrderCurrency", type: "number", admin: { readOnly: true }, label: "Montant converti dans la devise du bon" },
     { name: "supplierOffer", type: "relationship", relationTo: "supplier-offers", label: "Offre fournisseur concernée" },
     { name: "shipment", type: "relationship", relationTo: "inbound-shipments", label: "Expédition concernée" },
     {
