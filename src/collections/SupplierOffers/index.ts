@@ -22,6 +22,8 @@ export const SupplierOffers: CollectionConfig = {
     { name: "offerReference", type: "text", required: true, unique: true, label: "Référence de l'offre" },
     { name: "supplier", type: "relationship", relationTo: "suppliers", required: true, label: "Fournisseur" },
     { name: "product", type: "relationship", relationTo: "products", label: "Produit du catalogue" },
+    { name: "sourcingRequest", type: "relationship", relationTo: "sourcing-requests", label: "Demande client concernée" },
+    { name: "purchaseOrder", type: "relationship", relationTo: "purchase-orders", label: "Bon de commande issu de cette offre" },
     { name: "productName", type: "text", required: true, label: "Nom du produit chez le fournisseur" },
     { name: "brand", type: "text", label: "Marque" },
     { name: "model", type: "text", label: "Modèle / Référence" },
