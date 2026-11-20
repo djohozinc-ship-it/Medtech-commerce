@@ -123,6 +123,22 @@ export const CashTransactions: CollectionConfig = {
         const transactionType = data.transactionType ?? originalDoc?.transactionType;
         const purchaseOrderValue = data.purchaseOrder ?? originalDoc?.purchaseOrder;
         const purchaseOrderId = typeof purchaseOrderValue === "object" ? purchaseOrderValue?.id : purchaseOrderValue;
+        if (transactionType === "customer_payment" && (data.status ?? originalDoc?.status) === "confirmed") {
+          const customerValue = data.customer ?? originalDoc?.customer;
+          const customerId = typeof customerValue === "object" && customerValue ? String(customerValue.id ?? "") : String(customerValue ?? "");
+          const orderValue = data.order ?? originalDoc?.order;
+          const orderId = typeof orderValue === "object" && orderValue ? String(orderValue.id ?? "") : String(orderValue ?? "");
+          const proof = data.proofDocuments ?? originalDoc?.proofDocuments;
+          const providerReference = data.providerTransactionId ?? originalDoc?.providerTransactionId;
+          const confirmedBy = data.confirmedBy ?? originalDoc?.confirmedBy;
+          if (!customerId || !orderId) throw new Error("Un encaissement client confirmé doit être lié à un client et à une commande.");
+          if ((!Array.isArray(proof) || proof.length === 0) && !providerReference) throw new Error("Justificatif ou référence de transaction obligatoire pour confirmer l'encaissement.");
+          if (!confirmedBy) throw new Error("Indiquez la personne ou le système ayant vérifié l'encaissement.");
+          const order = await req.payload.findByID({ collection: "orders", id: orderId, depth: 0, overrideAccess: true }) as any;
+          const orderCustomerId = typeof order.customer === "object" && order.customer ? String(order.customer.id ?? "") : String(order.customer ?? "");
+          if (orderCustomerId !== customerId) throw new Error("Le client de l'encaissement ne correspond pas au client de la commande.");
+          if (String(order.orderDetails?.currency ?? "") !== String(data.currency ?? originalDoc?.currency ?? "")) throw new Error("La devise de l'encaissement doit correspondre à celle de la commande.");
+        }
         if (transactionType === "supplier_payment" && !purchaseOrderId) throw new Error("Un paiement fournisseur doit être lié à un bon de commande.");
         if (transactionType === "supplier_payment" && (data.status ?? originalDoc?.status) === "confirmed") {
           const proof = data.proofDocuments ?? originalDoc?.proofDocuments;
