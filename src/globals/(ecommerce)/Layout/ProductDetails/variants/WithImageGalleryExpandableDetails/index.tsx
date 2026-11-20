@@ -42,7 +42,7 @@ const hasValue = (value: string | number | null | undefined): value is string | 
   value !== null && value !== undefined && String(value).trim() !== "";
 
 const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
-  const rows = [
+  const rows: [string, string | number | null | undefined][] = [
     ["Fabricant", product.manufacturer],
     ["Marque", product.brand],
     ["Modèle / référence", product.modelReference],
