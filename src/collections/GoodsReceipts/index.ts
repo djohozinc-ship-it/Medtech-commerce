@@ -62,6 +62,61 @@ export const GoodsReceipts: CollectionConfig = {
     { name: "internalNotes", type: "textarea", label: "Notes internes" },
   ],
   hooks: {
+    afterChange: [
+      async ({ doc, req }) => {
+        if (!["accepted", "accepted_with_reservations"].includes(String(doc.status))) return doc;
+        const payload = req.payload as any;
+        const purchaseOrderId = typeof doc.purchaseOrder === "object" ? doc.purchaseOrder?.id : doc.purchaseOrder;
+        if (!purchaseOrderId) return doc;
+
+        const purchaseOrder = await payload.findByID({
+          collection: "purchase-orders",
+          id: purchaseOrderId,
+          depth: 0,
+          overrideAccess: true,
+        });
+        if (!purchaseOrder || !Array.isArray(purchaseOrder.items)) return doc;
+
+        const receipts = await payload.find({
+          collection: "goods-receipts",
+          where: { purchaseOrder: { equals: purchaseOrderId } },
+          limit: 1000,
+          depth: 0,
+          overrideAccess: true,
+        });
+        const receivedByLine = new Map<string, number>();
+        for (const receipt of receipts.docs) {
+          if (!["accepted", "accepted_with_reservations"].includes(String(receipt.status))) continue;
+          for (const item of Array.isArray(receipt.items) ? receipt.items : []) {
+            const lineId = String(item.purchaseOrderItemID ?? "");
+            if (!lineId) continue;
+            receivedByLine.set(lineId, (receivedByLine.get(lineId) ?? 0) + Number(item.quantityReceived ?? 0));
+          }
+        }
+        let anyReceived = false;
+        let allReceived = true;
+        const items = purchaseOrder.items.map((item: Record<string, unknown>) => {
+          const lineId = String(item.id ?? "");
+          const quantity = Number(item.quantity ?? 0);
+          const receivedQuantity = receivedByLine.get(lineId) ?? 0;
+          if (receivedQuantity > 0) anyReceived = true;
+          if (receivedQuantity < quantity) allReceived = false;
+          return { ...item, receivedQuantity };
+        });
+        const nextStatus = allReceived && anyReceived ? "received" : anyReceived ? "partially_received" : purchaseOrder.status;
+        await payload.update({
+          collection: "purchase-orders",
+          id: purchaseOrderId,
+          overrideAccess: true,
+          data: {
+            items,
+            status: nextStatus,
+            ...(nextStatus === "received" ? { receivedAt: new Date().toISOString() } : {}),
+          },
+        });
+        return doc;
+      },
+    ],
     beforeValidate: [
       ({ data, operation }) => {
         if (!data) return data;
