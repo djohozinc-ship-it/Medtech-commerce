@@ -28,6 +28,13 @@ export const countryList = [
     },
   },
   {
+    value: "bj",
+    label: {
+      en: "Benin",
+      pl: "Benin",
+    },
+  },
+  {
     value: "be",
     label: {
       en: "Belgium",
