@@ -77,6 +77,8 @@ export const PurchaseOrders: CollectionConfig = {
     { name: "chinaDomesticShipping", type: "number", min: 0, defaultValue: 0, label: "Transport intérieur Chine" },
     { name: "otherSupplierCharges", type: "number", min: 0, defaultValue: 0, label: "Autres frais facturés par le fournisseur" },
     { name: "totalAmount", type: "number", admin: { readOnly: true }, label: "Total du bon de commande" },
+    { name: "amountPaid", type: "number", admin: { readOnly: true }, label: "Montant fournisseur déjà payé" },
+    { name: "balanceDue", type: "number", admin: { readOnly: true }, label: "Solde fournisseur restant" },
     { name: "paymentTerms", type: "textarea", label: "Conditions de paiement convenues" },
     { name: "depositPercentage", type: "number", min: 0, max: 100, label: "Acompte demandé par le fournisseur (%)" },
     { name: "supplierInvoiceNumber", type: "text", label: "Numéro de facture / pro forma fournisseur" },
