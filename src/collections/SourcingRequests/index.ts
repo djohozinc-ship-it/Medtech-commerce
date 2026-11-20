@@ -20,20 +20,6 @@ export const SourcingRequests: CollectionConfig = {
     read: administratorsOnly,
     update: administratorsOnly,
     delete: administratorsOnly,
-    fields: {
-      internalNotes: { read: administratorsOnly, update: administratorsOnly },
-      quotedAmount: { read: administratorsOnly, update: administratorsOnly },
-      quotedCurrency: { read: administratorsOnly, update: administratorsOnly },
-      quotedShippingCost: { read: administratorsOnly, update: administratorsOnly },
-      quotedTotal: { read: administratorsOnly, update: administratorsOnly },
-      quoteConditions: { read: administratorsOnly, update: administratorsOnly },
-      depositPercentage: { read: administratorsOnly, update: administratorsOnly },
-      quoteValidUntil: { read: administratorsOnly, update: administratorsOnly },
-      convertedOrder: { read: administratorsOnly, update: administratorsOnly },
-      acceptedAt: { read: administratorsOnly, update: administratorsOnly },
-      declinedAt: { read: administratorsOnly, update: administratorsOnly },
-      status: { update: administratorsOnly },
-    },
   },
   endpoints: [
     { path: "/mine", method: "get", handler: getMySourcingRequests },
@@ -179,6 +165,7 @@ export const SourcingRequests: CollectionConfig = {
     },
     {
       name: "status",
+          access: { update: ({ req }) => req.user?.collection === "administrators" },
       type: "select",
       label: "État de traitement",
       required: true,
@@ -197,6 +184,10 @@ export const SourcingRequests: CollectionConfig = {
     },
     {
       name: "convertedOrder",
+          access: {
+            read: ({ req }) => req.user?.collection === "administrators",
+            update: ({ req }) => req.user?.collection === "administrators",
+          },
       type: "relationship",
       relationTo: "orders",
       label: "Commande créée à partir du devis",
@@ -205,8 +196,16 @@ export const SourcingRequests: CollectionConfig = {
     {
       type: "row",
       fields: [
-        { name: "acceptedAt", type: "date", label: "Date d'acceptation", admin: { readOnly: true } },
-        { name: "declinedAt", type: "date", label: "Date de refus", admin: { readOnly: true } },
+        { name: "acceptedAt",
+          access: {
+            read: ({ req }) => req.user?.collection === "administrators",
+            update: ({ req }) => req.user?.collection === "administrators",
+          }, type: "date", label: "Date d'acceptation", admin: { readOnly: true } },
+        { name: "declinedAt",
+          access: {
+            read: ({ req }) => req.user?.collection === "administrators",
+            update: ({ req }) => req.user?.collection === "administrators",
+          }, type: "date", label: "Date de refus", admin: { readOnly: true } },
       ],
     },
     {
@@ -221,12 +220,20 @@ export const SourcingRequests: CollectionConfig = {
           fields: [
             {
               name: "quotedAmount",
+          access: {
+            read: ({ req }) => req.user?.collection === "administrators",
+            update: ({ req }) => req.user?.collection === "administrators",
+          },
               type: "number",
               label: "Montant des produits (hors transport)",
               min: 0,
             },
             {
               name: "quotedCurrency",
+          access: {
+            read: ({ req }) => req.user?.collection === "administrators",
+            update: ({ req }) => req.user?.collection === "administrators",
+          },
               type: "select",
               label: "Devise du devis",
               defaultValue: "XOF",
@@ -243,6 +250,10 @@ export const SourcingRequests: CollectionConfig = {
           fields: [
             {
               name: "quotedShippingCost",
+          access: {
+            read: ({ req }) => req.user?.collection === "administrators",
+            update: ({ req }) => req.user?.collection === "administrators",
+          },
               type: "number",
               label: "Transport et livraison (devise du devis)",
               min: 0,
@@ -250,6 +261,10 @@ export const SourcingRequests: CollectionConfig = {
             },
             {
               name: "quotedTotal",
+          access: {
+            read: ({ req }) => req.user?.collection === "administrators",
+            update: ({ req }) => req.user?.collection === "administrators",
+          },
               type: "number",
               label: "Total du devis",
               admin: { readOnly: true },
@@ -258,6 +273,10 @@ export const SourcingRequests: CollectionConfig = {
         },
         {
           name: "quoteConditions",
+          access: {
+            read: ({ req }) => req.user?.collection === "administrators",
+            update: ({ req }) => req.user?.collection === "administrators",
+          },
           type: "textarea",
           label: "Conditions commerciales communiquées au client",
           admin: { description: "Délais estimés, garantie, inclusions/exclusions, modalités de livraison et de paiement." },
@@ -267,6 +286,10 @@ export const SourcingRequests: CollectionConfig = {
           fields: [
             {
               name: "depositPercentage",
+          access: {
+            read: ({ req }) => req.user?.collection === "administrators",
+            update: ({ req }) => req.user?.collection === "administrators",
+          },
               type: "number",
               label: "Acompte demandé (%)",
               min: 0,
@@ -274,6 +297,10 @@ export const SourcingRequests: CollectionConfig = {
             },
             {
               name: "quoteValidUntil",
+          access: {
+            read: ({ req }) => req.user?.collection === "administrators",
+            update: ({ req }) => req.user?.collection === "administrators",
+          },
               type: "date",
               label: "Date limite de validité du devis",
             },
@@ -281,6 +308,10 @@ export const SourcingRequests: CollectionConfig = {
         },
         {
           name: "internalNotes",
+          access: {
+            read: ({ req }) => req.user?.collection === "administrators",
+            update: ({ req }) => req.user?.collection === "administrators",
+          },
           type: "textarea",
           label: "Notes internes (non destinées au client)",
         },
