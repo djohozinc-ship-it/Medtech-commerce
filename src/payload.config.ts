@@ -24,6 +24,7 @@ import { Pages } from "./collections/Pages";
 import { Posts } from "./collections/Posts";
 import { ShipmentEvents } from "./collections/ShipmentEvents";
 import { SourcingRequests } from "./collections/SourcingRequests";
+import { SourcingAttachments } from "./collections/SourcingAttachments";
 import { InPostCourier } from "./globals/(ecommerce)/Couriers/InPostCourier/config";
 import { InPostCourierCOD } from "./globals/(ecommerce)/Couriers/InPostCourierCOD/config";
 import { InPostPickup } from "./globals/(ecommerce)/Couriers/InPostPickup/config";
@@ -128,6 +129,7 @@ export default buildConfig({
     ProductReviews,
     ShipmentEvents,
     SourcingRequests,
+    SourcingAttachments,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [
