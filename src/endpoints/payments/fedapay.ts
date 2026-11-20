@@ -72,7 +72,7 @@ export const createFedaPayPayment = async (req: PayloadRequest) => {
 
     const confirmedAllocations = await req.payload.find({
       collection: "order-payment-allocations",
-      depth: 0,
+      depth: 1,
       limit: 1000,
       pagination: false,
       overrideAccess: true,
@@ -82,11 +82,17 @@ export const createFedaPayPayment = async (req: PayloadRequest) => {
       ] },
     });
 
-    const alreadyAllocated = confirmedAllocations.docs.reduce((sum, item) => {
+    let alreadyAllocated = 0;
+    let validAllocationCount = 0;
+    for (const item of confirmedAllocations.docs) {
       const allocation = item as unknown as AnyRecord;
-      return sum + (Number(allocation.amountInOrderCurrency) || 0);
-    }, 0);
-    const paid = confirmedAllocations.docs.length > 0 ? alreadyAllocated : legacyPaid;
+      const cash = record(allocation.cashTransaction);
+      if (cash.status !== "confirmed" || cash.transactionType !== "customer_payment") continue;
+      if (cash.currency !== allocation.currency) continue;
+      alreadyAllocated += Number(allocation.amountInOrderCurrency) || 0;
+      validAllocationCount += 1;
+    }
+    const paid = validAllocationCount > 0 ? alreadyAllocated : legacyPaid;
     const due = Math.max(0, Math.floor(total - paid));
     const amount = body.amount === undefined ? due : Math.floor(Number(body.amount));
 
@@ -335,7 +341,11 @@ export const getCustomerOrderBalance = async (req: PayloadRequest) => {
       if (allocation.currency !== currency) continue;
       paidFromLedger += Number(allocation.amountInOrderCurrency) || 0;
     }
-    const paid = allocations.docs.length > 0 ? paidFromLedger : Number(details.amountPaid) || 0;
+    const paid = allocations.docs.some((raw) => {
+      const allocation = raw as unknown as AnyRecord;
+      const cash = record(allocation.cashTransaction);
+      return cash.status === "confirmed" && cash.transactionType === "customer_payment" && cash.currency === allocation.currency;
+    }) ? paidFromLedger : Number(details.amountPaid) || 0;
     return Response.json({
       orderId,
       currency,
