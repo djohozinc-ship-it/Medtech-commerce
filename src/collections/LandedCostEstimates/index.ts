@@ -24,6 +24,7 @@ export const LandedCostEstimates: CollectionConfig = {
   fields: [
     { name: "estimateReference", type: "text", required: true, unique: true, label: "Référence de simulation" },
     { name: "supplierOffer", type: "relationship", relationTo: "supplier-offers", required: true, label: "Offre fournisseur" },
+    { name: "purchaseOrder", type: "relationship", relationTo: "purchase-orders", label: "Bon de commande fournisseur" },
     { name: "productName", type: "text", required: true, label: "Produit" },
     { name: "quantity", type: "number", required: true, min: 1, label: "Quantité à acheter" },
     { name: "supplierCurrency", type: "select", required: true, options: [{ label: "CNY", value: "CNY" }, { label: "USD", value: "USD" }, { label: "EUR", value: "EUR" }], label: "Devise fournisseur" },
