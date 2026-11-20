@@ -129,6 +129,9 @@ export const GoodsReceipts: CollectionConfig = {
         const payload = req.payload as any;
         const po = await payload.findByID({ collection: "purchase-orders", id: purchaseOrderId, depth: 0, overrideAccess: true });
         if (!po || !Array.isArray(po.items)) throw new Error("Bon de commande introuvable ou sans lignes.");
+        if (!["acknowledged", "partially_received"].includes(String(po.status))) {
+          throw new Error("Le fournisseur doit avoir confirmé le bon de commande avant toute réception.");
+        }
         const orderLines = new Map<string, Record<string, unknown>>(po.items.map((line: Record<string, unknown>) => [String(line.id), line]));
         const currentReceiptId = originalDoc?.id;
         const otherReceipts = await payload.find({
