@@ -27,7 +27,7 @@ type MedtechProduct = Product & {
   availabilityMode?: string | null;
   technicalSpecifications?: string | null;
   technicalSpecs?: { id?: string | null; label: string; value: string }[] | null;
-  regulatoryDocuments?: (string | TechnicalDocument)[] | null;
+  regulatoryDocuments?: (string | MediaDocument)[] | null;
 };
 
 const hasValue = (value: string | number | null | undefined): value is string | number =>
