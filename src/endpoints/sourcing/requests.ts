@@ -248,6 +248,22 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
 
       return Response.json({ status: "converted_to_order", orderId: order.id }, { status: 201 });
     } catch (error) {
+      const createdOrder = await req.payload.find({
+        collection: "orders",
+        where: { sourcingRequest: { equals: requestId } },
+        limit: 1,
+        overrideAccess: true,
+      });
+      if (createdOrder.docs[0]) {
+        await req.payload.update({
+          collection: "sourcing-requests",
+          id: requestId,
+          overrideAccess: true,
+          context: { sourcingWorkflow: true },
+          data: { status: "converted_to_order", convertedOrder: createdOrder.docs[0].id },
+        });
+        return Response.json({ status: "converted_to_order", orderId: createdOrder.docs[0].id }, { status: 201 });
+      }
       await req.payload.update({
         collection: "sourcing-requests",
         id: requestId,
