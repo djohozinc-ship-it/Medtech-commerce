@@ -64,7 +64,6 @@ export const GoodsReceipts: CollectionConfig = {
   hooks: {
     afterChange: [
       async ({ doc, req }) => {
-        if (!["accepted", "accepted_with_reservations"].includes(String(doc.status))) return doc;
         const payload = req.payload as any;
         const purchaseOrderId = typeof doc.purchaseOrder === "object" ? doc.purchaseOrder?.id : doc.purchaseOrder;
         if (!purchaseOrderId) return doc;
