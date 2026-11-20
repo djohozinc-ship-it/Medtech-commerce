@@ -290,7 +290,7 @@ export const SourcingRequests: CollectionConfig = {
           String(value ?? "").replace(/[&<>"']/g, (character) => ({
             "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
           })[character] ?? character);
-        const baseUrl = (process.env.NEXT_PUBLIC_SERVER_URL ?? "").replace(/\\/$/, "");
+        const baseUrl = (process.env.NEXT_PUBLIC_SERVER_URL ?? "").replace(/\/$/, "");
         const quoteUrl = `${baseUrl}/fr/account/sourcing`;
         const total = amount + (Number.isFinite(shipping) ? shipping : 0);
         const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#172033">
