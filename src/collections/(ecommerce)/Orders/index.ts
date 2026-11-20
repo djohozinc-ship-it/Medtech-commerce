@@ -3,6 +3,7 @@ import { type CollectionConfig } from "payload";
 import { getChartData } from "@/endpoints/adminDashboard/getChartData";
 import { getOrderCount } from "@/endpoints/adminDashboard/getOrderCount";
 import { getRevenue } from "@/endpoints/adminDashboard/getRevenue";
+import { getFinanceSummary } from "@/endpoints/adminDashboard/getFinanceSummary";
 import { currencyField } from "@/fields/currencyField";
 import { countryList } from "@/globals/(ecommerce)/Couriers/utils/countryList";
 import { courierSelectOptions } from "@/globals/(ecommerce)/Couriers/utils/couriersConfig";
@@ -34,6 +35,11 @@ export const Orders: CollectionConfig = {
     beforeValidate: [generateID],
   },
   endpoints: [
+    {
+      path: "/finance-summary",
+      method: "post",
+      handler: getFinanceSummary,
+    },
     {
       path: "/revenue",
       method: "post",
