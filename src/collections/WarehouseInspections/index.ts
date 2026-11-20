@@ -44,8 +44,29 @@ export const WarehouseInspections: CollectionConfig = {
   ],
   hooks: {
     beforeValidate: [
-      ({ data, originalDoc }) => {
+      async ({ data, originalDoc, req }) => {
         if (!data) return data;
+        const receiptValue = data.goodsReceipt ?? originalDoc?.goodsReceipt;
+        const receiptId = typeof receiptValue === "object" && receiptValue ? receiptValue.id : receiptValue;
+        if (receiptId) {
+          const receipt = await (req.payload as any).findByID({
+            collection: "goods-receipts", id: receiptId, depth: 0, overrideAccess: true,
+          });
+          if (!receipt) throw new Error("La réception fournisseur liée à ce contrôle est introuvable.");
+          const inspectionWarehouseValue = data.warehouse ?? originalDoc?.warehouse;
+          const inspectionWarehouseId = typeof inspectionWarehouseValue === "object" && inspectionWarehouseValue ? inspectionWarehouseValue.id : inspectionWarehouseValue;
+          const receiptWarehouseId = typeof receipt.warehouse === "object" && receipt.warehouse ? receipt.warehouse.id : receipt.warehouse;
+          if (String(inspectionWarehouseId ?? "") !== String(receiptWarehouseId ?? "")) {
+            throw new Error("Le contrôle qualité doit être effectué dans le même entrepôt que la réception fournisseur.");
+          }
+          const receiptShipmentId = typeof receipt.inboundShipment === "object" && receipt.inboundShipment ? receipt.inboundShipment.id : receipt.inboundShipment;
+          const inspectionShipmentValue = data.shipment ?? originalDoc?.shipment;
+          const inspectionShipmentId = typeof inspectionShipmentValue === "object" && inspectionShipmentValue ? inspectionShipmentValue.id : inspectionShipmentValue;
+          if (receiptShipmentId && inspectionShipmentId && String(receiptShipmentId) !== String(inspectionShipmentId)) {
+            throw new Error("L'expédition du contrôle ne correspond pas à celle de la réception liée.");
+          }
+          if (receiptShipmentId && !inspectionShipmentId) data.shipment = receiptShipmentId;
+        }
         const expectedValue = data.quantityExpected ?? originalDoc?.quantityExpected;
         const receivedValue = data.quantityReceived ?? originalDoc?.quantityReceived;
         const expected = expectedValue == null ? undefined : Number(expectedValue);
