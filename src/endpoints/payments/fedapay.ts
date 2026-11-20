@@ -253,6 +253,22 @@ export const fedapayReturn = async (req: PayloadRequest) => {
   if (!remoteId) return Response.json({ message: "Identifiant de transaction manquant" }, { status: 400 });
   try {
     const result = await confirmFedaPayTransaction(req, remoteId);
+    const attempts = await req.payload.find({
+      collection: "payment-attempts",
+      depth: 0,
+      limit: 1,
+      overrideAccess: true,
+      where: { providerTransactionId: { equals: remoteId } },
+    });
+    const attempt = attempts.docs[0] as unknown as AnyRecord | undefined;
+    const orderId = attempt ? idOf(attempt.order) : undefined;
+    if (orderId && process.env.NEXT_PUBLIC_SERVER_URL) {
+      const outcome = result.paymentStatus === "paid" ? "success" : "pending";
+      return Response.redirect(
+        new URL(`/fr/order/${encodeURIComponent(orderId)}?payment=${outcome}`, process.env.NEXT_PUBLIC_SERVER_URL),
+        303,
+      );
+    }
     return Response.json(result, { status: result.status });
   } catch (error) {
     req.payload.logger.error({ err: error, msg: "Unable to verify FedaPay return" });
