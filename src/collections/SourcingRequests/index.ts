@@ -320,6 +320,7 @@ export const SourcingRequests: CollectionConfig = {
         // Les visiteurs peuvent soumettre une demande, mais jamais modifier
         // son statut, le devis ou les notes réservées à l'administration.
         const isAdmin = req.user?.collection === "administrators" || req.context?.sourcingWorkflow === true;
+        if (typeof data.customerEmail === "string") data.customerEmail = data.customerEmail.trim().toLowerCase();
         if (!isAdmin) {
           data.status = "received";
           delete data.quotedAmount;
