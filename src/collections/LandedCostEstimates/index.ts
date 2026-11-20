@@ -64,7 +64,18 @@ export const LandedCostEstimates: CollectionConfig = {
   ],
   hooks: {
     beforeValidate: [
-      ({ data }) => {
+      ({ data, originalDoc }) => {
+        if (!data) return data;
+        const costStage = data.costStage ?? originalDoc?.costStage ?? "estimate";
+        if (costStage === "actual") {
+          const purchaseOrder = data.purchaseOrder ?? originalDoc?.purchaseOrder;
+          const evidence = data.costEvidence ?? originalDoc?.costEvidence;
+          const rateSource = data.exchangeRateSource ?? originalDoc?.exchangeRateSource;
+          const rateDate = data.exchangeRateDate ?? originalDoc?.exchangeRateDate;
+          if (!purchaseOrder || !Array.isArray(evidence) || evidence.length === 0 || !rateSource || !rateDate) {
+            throw new Error("Un coût réel doit être rattaché à un bon d'achat et justifié par des pièces, une source et une date de taux de change.");
+          }
+        }
         if (!data) return data;
         const quantity = numeric(data.quantity);
         const unitPrice = numeric(data.unitPurchasePrice);
