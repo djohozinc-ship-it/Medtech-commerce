@@ -4,7 +4,7 @@ const administratorsOnly: Access = ({ req }) => req.user?.collection === "admini
 const numberOrUndefined = (value: unknown): number | undefined =>
   typeof value === "number" && Number.isFinite(value) ? value : undefined;
 
-export const OrderCostAllocations: CollectionConfig = {
+export const OrderCostAllocations: CollectionConfig<"order-cost-allocations"> = {
   slug: "order-cost-allocations",
   labels: { singular: "Affectation de coût", plural: "Affectations de coûts" },
   admin: {
