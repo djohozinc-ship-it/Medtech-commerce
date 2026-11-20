@@ -176,6 +176,20 @@ export const SourcingRequests: CollectionConfig = {
       ],
     },
     {
+      name: "convertedOrder",
+      type: "relationship",
+      relationTo: "orders",
+      label: "Commande créée à partir du devis",
+      admin: { readOnly: true, position: "sidebar" },
+    },
+    {
+      type: "row",
+      fields: [
+        { name: "acceptedAt", type: "date", label: "Date d'acceptation", admin: { readOnly: true } },
+        { name: "declinedAt", type: "date", label: "Date de refus", admin: { readOnly: true } },
+      ],
+    },
+    {
       type: "collapsible",
       label: "Traitement interne du devis",
       admin: {
@@ -268,6 +282,29 @@ export const SourcingRequests: CollectionConfig = {
           delete data.depositPercentage;
           delete data.quoteValidUntil;
           delete data.internalNotes;
+        }
+
+        if (!isAdmin) {
+          delete data.convertedOrder;
+          delete data.acceptedAt;
+          delete data.declinedAt;
+          delete data.quotedShippingCost;
+          delete data.quotedTotal;
+          delete data.quoteConditions;
+        } else {
+          if (typeof data.quotedAmount === "number" && typeof data.quotedShippingCost === "number") {
+            data.quotedTotal = data.quotedAmount + data.quotedShippingCost;
+          } else if (typeof data.quotedAmount === "number") {
+            data.quotedTotal = data.quotedAmount;
+          }
+          if (data.status === "quote_sent") {
+            if (typeof data.quotedAmount !== "number" || data.quotedAmount <= 0) {
+              throw new Error("Renseignez un montant de devis positif avant de l'envoyer.");
+            }
+            if (data.quoteValidUntil && new Date(data.quoteValidUntil).getTime() < Date.now()) {
+              throw new Error("La date de validité du devis doit être future.");
+            }
+          }
         }
 
         if (!data.requestReference || !isAdmin) {
