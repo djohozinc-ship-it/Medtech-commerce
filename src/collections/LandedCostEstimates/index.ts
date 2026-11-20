@@ -1,6 +1,6 @@
-import { type CollectionConfig } from "payload";
+import { type Access, type CollectionConfig } from "payload";
 
-const administratorsOnly = ({ req }: { req: { user?: { collection?: string } | null } }) =>
+const administratorsOnly: Access = ({ req }) =>
   req.user?.collection === "administrators";
 
 const numeric = (value: unknown): number | undefined =>
