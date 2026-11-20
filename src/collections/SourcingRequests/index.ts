@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 
 import { authenticated } from "@/access/authenticated";
+import { getMySourcingRequests, respondToSourcingQuote } from "@/endpoints/sourcing/requests";
 
 /**
  * Demandes de sourcing pour les produits absents du catalogue.
@@ -202,6 +203,30 @@ export const SourcingRequests: CollectionConfig = {
               ],
             },
           ],
+        },
+        {
+          type: "row",
+          fields: [
+            {
+              name: "quotedShippingCost",
+              type: "number",
+              label: "Transport et livraison (devise du devis)",
+              min: 0,
+              defaultValue: 0,
+            },
+            {
+              name: "quotedTotal",
+              type: "number",
+              label: "Total du devis",
+              admin: { readOnly: true },
+            },
+          ],
+        },
+        {
+          name: "quoteConditions",
+          type: "textarea",
+          label: "Conditions commerciales communiquées au client",
+          admin: { description: "Délais estimés, garantie, inclusions/exclusions, modalités de livraison et de paiement." },
         },
         {
           type: "row",
