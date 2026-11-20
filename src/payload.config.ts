@@ -22,6 +22,7 @@ import { Categories } from "./collections/Categories";
 import { Media } from "./collections/Media";
 import { Pages } from "./collections/Pages";
 import { Posts } from "./collections/Posts";
+import { ShipmentEvents } from "./collections/ShipmentEvents";
 import { InPostCourier } from "./globals/(ecommerce)/Couriers/InPostCourier/config";
 import { InPostCourierCOD } from "./globals/(ecommerce)/Couriers/InPostCourierCOD/config";
 import { InPostPickup } from "./globals/(ecommerce)/Couriers/InPostPickup/config";
@@ -124,6 +125,7 @@ export default buildConfig({
     ProductCategories,
     ProductSubCategories,
     ProductReviews,
+    ShipmentEvents,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [
