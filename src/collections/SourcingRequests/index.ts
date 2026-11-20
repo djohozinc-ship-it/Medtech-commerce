@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 
 import { authenticated } from "@/access/authenticated";
+import { sendEmail } from "@/utilities/nodemailer";
 import { getMySourcingRequests, respondToSourcingQuote } from "@/endpoints/sourcing/requests";
 
 /**
@@ -268,6 +269,45 @@ export const SourcingRequests: CollectionConfig = {
     },
   ],
   hooks: {
+    afterChange: [
+      async ({ doc, previousDoc, req }) => {
+        const current = doc as unknown as Record<string, unknown>;
+        const previous = previousDoc as unknown as Record<string, unknown> | undefined;
+        if (current.status !== "quote_sent" || previous?.status === "quote_sent") return doc;
+
+        const email = typeof current.customerEmail === "string" ? current.customerEmail : "";
+        const amount = Number(current.quotedAmount);
+        const shipping = Number(current.quotedShippingCost ?? 0);
+        const currency = typeof current.quotedCurrency === "string" ? current.quotedCurrency : "XOF";
+        if (!email || !Number.isFinite(amount) || amount <= 0) return doc;
+
+        const escapeHtml = (value: unknown) =>
+          String(value ?? "").replace(/[&<>"']/g, (character) => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+          })[character] ?? character);
+        const baseUrl = (process.env.NEXT_PUBLIC_SERVER_URL ?? "").replace(/\\/$/, "");
+        const quoteUrl = `${baseUrl}/fr/account/sourcing`;
+        const total = amount + (Number.isFinite(shipping) ? shipping : 0);
+        const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#172033">
+          <h2>Votre devis Medtech Commerce est disponible</h2>
+          <p>Bonjour ${escapeHtml(current.customerName)},</p>
+          <p>Nous avons préparé le devis pour votre demande <strong>${escapeHtml(current.requestReference)}</strong> concernant : ${escapeHtml(current.productName)}.</p>
+          <p>Montant des produits : <strong>${amount.toLocaleString("fr-FR")} ${escapeHtml(currency)}</strong><br/>
+          Transport : <strong>${shipping.toLocaleString("fr-FR")} ${escapeHtml(currency)}</strong><br/>
+          Total : <strong>${total.toLocaleString("fr-FR")} ${escapeHtml(currency)}</strong></p>
+          <p>Connectez-vous à votre espace client pour consulter les conditions et accepter ou refuser ce devis.</p>
+          <p><a href="${escapeHtml(quoteUrl)}">Consulter mon devis</a></p>
+          <p>Medtech Commerce</p>
+        </div>`;
+
+        try {
+          await sendEmail({ to: email, subject: "Votre devis Medtech Commerce est disponible", html });
+        } catch (error) {
+          req.payload.logger.error({ err: error, msg: "Unable to email customer about sourcing quote" });
+        }
+        return doc;
+      },
+    ],
     beforeValidate: [
       ({ data, req, originalDoc }) => {
         if (!data) return data;
