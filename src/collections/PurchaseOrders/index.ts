@@ -267,8 +267,13 @@ export const PurchaseOrders: CollectionConfig = {
         const items = Array.isArray(data.items) ? data.items : existingItems;
         for (const line of items as Array<Record<string, unknown>>) {
           const lineOfferValue = line.supplierOffer;
-          const lineOfferId = typeof lineOfferValue === "object" && lineOfferValue ? (lineOfferValue as { id?: string | number }).id : lineOfferValue;
-          if (!lineOfferId) continue;
+          const lineOfferId = typeof lineOfferValue === "string" || typeof lineOfferValue === "number"
+            ? lineOfferValue
+            : lineOfferValue && typeof lineOfferValue === "object" && "id" in lineOfferValue
+              && (typeof lineOfferValue.id === "string" || typeof lineOfferValue.id === "number")
+              ? lineOfferValue.id
+              : undefined;
+          if (lineOfferId === undefined || lineOfferId === null || lineOfferId === "") continue;
           const lineOffer = await (req.payload).findByID({ collection: "supplier-offers", id: lineOfferId, depth: 0, overrideAccess: true });
           if (!lineOffer || lineOffer.quoteStatus !== "approved") throw new Error("Chaque offre associée à une ligne d'achat doit être validée.");
           const supplierValue = data.supplier ?? originalDoc?.supplier;
