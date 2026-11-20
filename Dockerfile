@@ -24,7 +24,9 @@ ENV DATABASE_URI=${DATABASE_URI}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-#RUN if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; else echo "Lockfile not found." && exit 1; fi
+# Regenerate Payload types from the active config so locale and collection
+# types cannot drift from src/payload.config.ts before TypeScript validation.
+RUN corepack enable pnpm && pnpm generate:types
 RUN corepack enable pnpm && pnpm run build
 
 FROM base AS runner
