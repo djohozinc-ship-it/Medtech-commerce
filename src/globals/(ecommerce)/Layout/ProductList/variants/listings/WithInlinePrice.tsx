@@ -9,6 +9,7 @@ import { getPriceRange } from "@/utilities/getPriceRange";
 
 export const WithInlinePrice = ({ products }: { products: Product[] }) => {
   const t = useTranslations("ProductList");
+  const productDetailsT = useTranslations("ProductDetails");
   return (
     <>
       {products.map((product) => {
@@ -18,7 +19,7 @@ export const WithInlinePrice = ({ products }: { products: Product[] }) => {
 
           let pricingComponent: ReactNode;
           if (medtechProduct.salesMode === "quote") {
-            pricingComponent = <span className="text-sm font-semibold text-main-700">Sur devis</span>;
+            pricingComponent = <span className="text-sm font-semibold text-main-700">{productDetailsT("quote")}</span>;
           } else if (priceRange?.length === 2) {
             pricingComponent = (
               <>
