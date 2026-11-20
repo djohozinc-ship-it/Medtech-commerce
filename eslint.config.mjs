@@ -52,8 +52,6 @@ export default [
         },
       ],
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-
-      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
       "import/no-mutable-exports": "error",
       "import/no-cycle": "off", // bring back later
       "import/no-default-export": "error",
