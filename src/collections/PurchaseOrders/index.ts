@@ -86,6 +86,8 @@ export const PurchaseOrders: CollectionConfig = {
     { name: "approvalName", type: "text", admin: { readOnly: true }, label: "Validé par" },
     { name: "approvedAt", type: "date", admin: { readOnly: true }, label: "Date de validation interne" },
     { name: "sentAt", type: "date", label: "Date d'envoi au fournisseur" },
+    { name: "supplierEmailSentAt", type: "date", admin: { readOnly: true }, label: "E-mail fournisseur envoyé le" },
+    { name: "supplierEmailError", type: "textarea", admin: { readOnly: true }, label: "Erreur email fournisseur" },
     { name: "acknowledgedAt", type: "date", label: "Confirmation du fournisseur reçue le" },
     { name: "receivedAt", type: "date", label: "Date de réception complète" },
     {
@@ -155,8 +157,21 @@ export const PurchaseOrders: CollectionConfig = {
             subject: `Bon de commande ${doc.purchaseOrderReference} — Medtech Commerce`,
             html,
           });
+          await payload.update({
+            collection: "purchase-orders",
+            id: doc.id,
+            overrideAccess: true,
+            data: { supplierEmailSentAt: new Date().toISOString(), supplierEmailError: null },
+          });
         } catch (error) {
+          const message = error instanceof Error ? error.message : "Erreur inconnue d'envoi";
           req.payload.logger.error({ err: error, msg: "Unable to email supplier purchase order", purchaseOrder: doc.purchaseOrderReference });
+          await payload.update({
+            collection: "purchase-orders",
+            id: doc.id,
+            overrideAccess: true,
+            data: { supplierEmailError: message },
+          });
         }
         return doc;
       },
@@ -171,7 +186,8 @@ export const PurchaseOrders: CollectionConfig = {
 
         const offerValue = data.supplierOffer ?? originalDoc?.supplierOffer;
         const offerId = typeof offerValue === "object" && offerValue !== null ? (offerValue as { id?: string | number }).id : offerValue;
-        if (offerId) {
+        const shouldValidateOffer = Boolean(offerId) && (operation === "create" || data.supplierOffer !== undefined || (data.status === "approved" && originalDoc?.status !== "approved"));
+        if (shouldValidateOffer) {
           const payload = req.payload as any;
           const offer = await payload.findByID({
             collection: "supplier-offers",
