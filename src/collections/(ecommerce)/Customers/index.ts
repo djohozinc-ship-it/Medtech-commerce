@@ -13,7 +13,7 @@ const customerOrAdministrator: Access = ({ req }) => {
 
 const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
 
-export const Customers: CollectionConfig = {
+export const Customers: CollectionConfig<"customers"> = {
   slug: "customers",
   access: {
     admin: ({ req }) => req.user?.collection === "administrators",
