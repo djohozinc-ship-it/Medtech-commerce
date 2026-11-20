@@ -93,6 +93,7 @@ export const PurchaseOrders: CollectionConfig = {
     { name: "sentAt", type: "date", label: "Date d'envoi au fournisseur" },
     { name: "supplierEmailSentAt", type: "date", admin: { readOnly: true }, label: "E-mail fournisseur envoyé le" },
     { name: "supplierEmailError", type: "textarea", admin: { readOnly: true }, label: "Erreur email fournisseur" },
+    { name: "resendSupplierEmail", type: "checkbox", defaultValue: false, label: "Renvoyer le bon au fournisseur" },
     { name: "acknowledgedAt", type: "date", label: "Confirmation du fournisseur reçue le" },
     { name: "receivedAt", type: "date", label: "Date de réception complète" },
     {
@@ -129,7 +130,7 @@ export const PurchaseOrders: CollectionConfig = {
         if (currentOfferId) {
           await payload.update({ collection: "supplier-offers", id: currentOfferId, overrideAccess: true, data: { purchaseOrder: doc.id } });
         }
-        if (doc.status !== "sent_to_supplier" || previousDoc?.status === "sent_to_supplier") return doc;
+        if (doc.status !== "sent_to_supplier" || (previousDoc?.status === "sent_to_supplier" && !doc.resendSupplierEmail)) return doc;
         const supplierId = typeof doc.supplier === "object" ? doc.supplier?.id : doc.supplier;
         if (!supplierId) return doc;
         const supplier = await payload.findByID({
@@ -145,7 +146,7 @@ export const PurchaseOrders: CollectionConfig = {
             collection: "purchase-orders",
             id: doc.id,
             overrideAccess: true,
-            data: { supplierEmailError: message },
+            data: { supplierEmailError: message, resendSupplierEmail: false },
           });
           return doc;
         }
@@ -183,7 +184,7 @@ export const PurchaseOrders: CollectionConfig = {
             collection: "purchase-orders",
             id: doc.id,
             overrideAccess: true,
-            data: { supplierEmailSentAt: new Date().toISOString(), supplierEmailError: null },
+            data: { supplierEmailSentAt: new Date().toISOString(), supplierEmailError: null, resendSupplierEmail: false },
           });
         } catch (error) {
           const message = error instanceof Error ? error.message : "Erreur inconnue d'envoi";
