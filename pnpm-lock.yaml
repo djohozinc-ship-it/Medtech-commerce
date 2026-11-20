@@ -188,8 +188,8 @@ importers:
         specifier: ^4.2.3
         version: 4.2.3(next@15.5.29(@babel/core@7.28.5)(@types/node@25.0.2)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.96.0))
       nodemailer:
-        specifier: ^9.1.0
-        version: 9.1.1
+        specifier: ^10.0.6
+        version: 10.6.0
       payload:
         specifier: 3.90.0
         version: 3.90.0(graphql@16.12.0)(typescript@5.9.3)
@@ -5382,6 +5382,10 @@ packages:
   node-releases@2.0.65:
     resolution: {integrity: sha512-PfvofsGQ+MiOQIPkX9fU8ELUWmy5zL74CdQaph/ismKszfFkfwXaw0cGiwbwym2hT9k5+mdyl8O5WQ1MD8EHmA==}
     engines: {node: '>=18'}
+
+  nodemailer@10.6.0:
+    resolution: {integrity: sha512-jWanL7D9GD3jvUDYKmoC5rWTiG8MnBgnN2yV68bgMKip1zUJhiSTyz7Eg+18y8sk5OvdVDzws5nZK5arSI4f5Q==}
+    engines: {node: '>=20.0.0'}
 
   nodemailer@9.1.1:
     resolution: {integrity: sha512-izw9mVKFix6YSnC9eLgV6g1opl9DUlRio9ZNcq+Wu9Ujn2UwF+8Nl0B8nz22kEC+CTZCvinkxwJ0DeFbb6NwcQ==}
@@ -12414,6 +12418,8 @@ snapshots:
       whatwg-url: 5.0.0
 
   node-releases@2.0.65: {}
+
+  nodemailer@10.6.0: {}
 
   nodemailer@9.1.1: {}
 
