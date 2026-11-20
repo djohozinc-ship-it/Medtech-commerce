@@ -143,7 +143,7 @@ export function SourcingRequestForm() {
             accept=".jpg,.jpeg,.png,.webp,.pdf"
             className="mt-2 block w-full text-sm"
             onChange={(event) => {
-              const selected = Array.from(event.target.files || []);
+              const selected = Array.from(event.target.files ?? []);
               setFiles(selected.slice(0, MAX_FILES));
               if (selected.length > MAX_FILES) setMessage("Seuls les 4 premiers fichiers ont été retenus.");
             }}
