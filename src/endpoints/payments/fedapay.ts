@@ -12,6 +12,11 @@ const getRemoteTransaction = (body: unknown): AnyRecord => {
   const root = record(body);
   return record(root["v1/transaction"] ?? root.transaction ?? root);
 };
+const readRequestJson = async (req: PayloadRequest): Promise<unknown> => {
+  if (typeof req.json !== "function") throw new Error("Request body is unavailable");
+  return req.json();
+};
+
 const apiBase = () =>
   process.env.FEDAPAY_ENV === "live"
     ? "https://api.fedapay.com/v1"
@@ -44,7 +49,7 @@ export const createFedaPayPayment = async (req: PayloadRequest) => {
   }
 
   try {
-    const body = await req.json() as { orderId?: string; amount?: number };
+    const body = await readRequestJson(req) as { orderId?: string; amount?: number };
     if (!body.orderId) return Response.json({ message: "Commande manquante" }, { status: 400 });
 
     const order = await req.payload.findByID({
@@ -244,7 +249,7 @@ const confirmFedaPayTransaction = async (req: PayloadRequest, remoteId: string) 
       data: {
         allocationReference: `FDP-ALLOC-${remoteId}`,
         order: orderId,
-        cashTransaction: cashTransactionId,
+        cashTransaction: String(cashTransactionId),
         allocatedAmount: amount,
         currency: "XOF",
         exchangeRateToOrderCurrency: 1,
@@ -302,7 +307,7 @@ export const fedapayReturn = async (req: PayloadRequest) => {
 export const fedapayWebhook = async (req: PayloadRequest) => {
   if (req.method !== "POST") return Response.json({ message: "Method not allowed" }, { status: 405 });
   try {
-    const body = record(await req.json());
+    const body = record(await readRequestJson(req));
     const data = record(body["v1/event"] ?? body.event ?? body);
     const entity = record(data.entity ?? data.object ?? data);
     const remoteId = entity.id ?? record(entity.transaction).id;
