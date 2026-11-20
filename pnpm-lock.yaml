@@ -26,6 +26,7 @@ overrides:
   nanoid@3: ^3.3.18
   browserslist: ^4.28.7
   source-map-js: ^1.2.2
+  nodemailer: ^10.0.6
 
 importers:
 
@@ -5387,10 +5388,6 @@ packages:
     resolution: {integrity: sha512-jWanL7D9GD3jvUDYKmoC5rWTiG8MnBgnN2yV68bgMKip1zUJhiSTyz7Eg+18y8sk5OvdVDzws5nZK5arSI4f5Q==}
     engines: {node: '>=20.0.0'}
 
-  nodemailer@9.1.1:
-    resolution: {integrity: sha512-izw9mVKFix6YSnC9eLgV6g1opl9DUlRio9ZNcq+Wu9Ujn2UwF+8Nl0B8nz22kEC+CTZCvinkxwJ0DeFbb6NwcQ==}
-    engines: {node: '>=6.0.0'}
-
   noms@0.0.0:
     resolution: {integrity: sha512-lNDU9VJaOPxUmXcLb+HQFeUgQQPtMI24Gt6hgfuMHRJgMRHMF/qZ4HJD3GDru4sSw9IQl2jPjAYnQrdIeLbwow==}
 
@@ -8435,7 +8432,7 @@ snapshots:
 
   '@payloadcms/email-nodemailer@3.90.0(payload@3.90.0(graphql@16.12.0)(typescript@5.9.3))':
     dependencies:
-      nodemailer: 9.1.1
+      nodemailer: 10.6.0
       payload: 3.90.0(graphql@16.12.0)(typescript@5.9.3)
 
   '@payloadcms/graphql@3.90.0(graphql@16.12.0)(payload@3.90.0(graphql@16.12.0)(typescript@5.9.3))(typescript@5.9.3)':
@@ -8494,7 +8491,7 @@ snapshots:
       '@aws-sdk/lib-storage': 3.948.0(@aws-sdk/client-s3@3.948.0)
       '@payloadcms/email-nodemailer': 3.90.0(payload@3.90.0(graphql@16.12.0)(typescript@5.9.3))
       amazon-cognito-identity-js: 6.3.16
-      nodemailer: 9.1.1
+      nodemailer: 10.6.0
       payload: 3.90.0(graphql@16.12.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - aws-crt
@@ -12420,8 +12417,6 @@ snapshots:
   node-releases@2.0.65: {}
 
   nodemailer@10.6.0: {}
-
-  nodemailer@9.1.1: {}
 
   noms@0.0.0:
     dependencies:
