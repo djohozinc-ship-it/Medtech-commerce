@@ -142,6 +142,18 @@ export const GoodsReceipts: CollectionConfig = {
         if (!["acknowledged", "partially_received"].includes(String(po.status)) && !originalDoc) {
           throw new Error("Le fournisseur doit avoir confirmé le bon de commande avant toute réception.");
         }
+        const receiptStatus = data.status ?? originalDoc?.status;
+        if (["accepted", "accepted_with_reservations", "rejected"].includes(String(receiptStatus))) {
+          const inspectionValue = data.inspection ?? originalDoc?.inspection;
+          const inspectionId = typeof inspectionValue === "object" && inspectionValue ? inspectionValue.id : inspectionValue;
+          if (!inspectionId) throw new Error("Une fiche de contrôle qualité doit être liée avant de valider la réception.");
+          const inspection = await payload.findByID({ collection: "warehouse-inspections", id: inspectionId, depth: 0, overrideAccess: true });
+          const expectedResult = receiptStatus === "accepted" ? "passed"
+            : receiptStatus === "accepted_with_reservations" ? "passed_with_reservations" : "failed";
+          if (!inspection || inspection.result !== expectedResult) {
+            throw new Error("Le résultat de la réception doit correspondre au résultat de la fiche de contrôle qualité.");
+          }
+        }
         const orderLines = new Map<string, Record<string, unknown>>(po.items.map((line: Record<string, unknown>) => [String(line.id), line]));
         const currentReceiptId = originalDoc?.id;
         const otherReceipts = await payload.find({
