@@ -134,7 +134,7 @@ export const CashTransactions: CollectionConfig = {
           if (!customerId || !orderId) throw new Error("Un encaissement client confirmé doit être lié à un client et à une commande.");
           if ((!Array.isArray(proof) || proof.length === 0) && !providerReference) throw new Error("Justificatif ou référence de transaction obligatoire pour confirmer l'encaissement.");
           if (!confirmedBy) throw new Error("Indiquez la personne ou le système ayant vérifié l'encaissement.");
-          const order = await req.payload.findByID({ collection: "orders", id: orderId, depth: 0, overrideAccess: true }) as any;
+          const order = await req.payload.findByID({ collection: "orders", id: orderId, depth: 0, overrideAccess: true });
           const orderCustomerId = typeof order.customer === "object" && order.customer ? String(order.customer.id ?? "") : String(order.customer ?? "");
           if (orderCustomerId !== customerId) throw new Error("Le client de l'encaissement ne correspond pas au client de la commande.");
           if (String(order.orderDetails?.currency ?? "") !== String(data.currency ?? originalDoc?.currency ?? "")) throw new Error("La devise de l'encaissement doit correspondre à celle de la commande.");
@@ -151,7 +151,7 @@ export const CashTransactions: CollectionConfig = {
           if (!customerId || !orderId) throw new Error("Un remboursement confirmé doit être lié au client et à la commande concernés.");
           if ((!Array.isArray(proof) || proof.length === 0) && !providerReference) throw new Error("Justificatif ou référence de remboursement obligatoire.");
           if (!confirmedBy) throw new Error("Indiquez la personne ayant vérifié le remboursement.");
-          const order = await req.payload.findByID({ collection: "orders", id: orderId, depth: 0, overrideAccess: true }) as any;
+          const order = await req.payload.findByID({ collection: "orders", id: orderId, depth: 0, overrideAccess: true });
           const orderCustomerId = typeof order.customer === "object" && order.customer ? String(order.customer.id ?? "") : String(order.customer ?? "");
           if (orderCustomerId !== customerId) throw new Error("Le client du remboursement ne correspond pas au client de la commande.");
           if (String(order.orderDetails?.currency ?? "") !== String(data.currency ?? originalDoc?.currency ?? "")) throw new Error("La devise du remboursement doit correspondre à celle de la commande.");
@@ -191,7 +191,7 @@ export const CashTransactions: CollectionConfig = {
           if (!confirmedBy) throw new Error("Indiquez la personne qui a vérifié le paiement fournisseur.");
         }
         if (transactionType === "supplier_payment" && purchaseOrderId) {
-          const payload = req.payload as any;
+          const payload = req.payload;
           const purchaseOrder = await payload.findByID({
             collection: "purchase-orders",
             id: purchaseOrderId,
@@ -242,7 +242,7 @@ export const CashTransactions: CollectionConfig = {
     ],
     afterChange: [
       async ({ doc, previousDoc, req }) => {
-        const payload = req.payload as any;
+        const payload = req.payload;
         const relationId = (value: unknown) =>
           typeof value === "object" && value !== null ? String((value as { id?: string | number }).id ?? "") : String(value ?? "");
         const ids = [...new Set([relationId(doc.purchaseOrder), relationId(previousDoc?.purchaseOrder)].filter(Boolean))];
