@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { useEffect, useState } from "react";
 
 import { CMSLink } from "@/components/Link";
@@ -90,6 +90,7 @@ export const FloatingHeader = ({ data }: { data: Header }) => {
             {data.navItems?.map(({ link }, i) => {
               return <CMSLink key={i} {...link} appearance="link" className="text-black lg:text-white" />;
             })}
+            <Link href="/sourcing" className="text-black lg:text-white">Demander un devis</Link>
           </div>
         </nav>
         <CMSLink className="ml-auto hidden md:flex" />
