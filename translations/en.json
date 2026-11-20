@@ -38,7 +38,10 @@
     "technical-notes": "Technical notes and compatibility",
     "documents-available": "Available documents",
     "verification-note": "The displayed specifications and documents are those supplied for this product reference. Verify compatibility, availability and applicable supporting documents before ordering.",
-    "quote": "Request a quote"
+    "quote": "Request a quote",
+    "month-unit": "months",
+    "day-unit": "days",
+    "document-label": "Technical document"
   },
   "ProductList": {
     "variants-singular": "variant",
