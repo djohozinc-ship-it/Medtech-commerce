@@ -116,6 +116,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
         collection: "sourcing-requests",
         id: requestId,
         overrideAccess: true,
+        context: { sourcingWorkflow: true },
         data: { status: "expired" },
       });
       return Response.json({ message: "La validité de ce devis est expirée." }, { status: 410 });
@@ -126,6 +127,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
         collection: "sourcing-requests",
         id: requestId,
         overrideAccess: true,
+        context: { sourcingWorkflow: true },
         data: { status: "declined", declinedAt: new Date().toISOString() },
       });
       return Response.json({ status: "declined" });
@@ -151,6 +153,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
       collection: "sourcing-requests",
       id: requestId,
       overrideAccess: true,
+      context: { sourcingWorkflow: true },
       data: { status: "converting_to_order", acceptedAt: new Date().toISOString() },
     });
 
@@ -194,6 +197,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
         collection: "sourcing-requests",
         id: requestId,
         overrideAccess: true,
+        context: { sourcingWorkflow: true },
         data: { status: "converted_to_order", convertedOrder: order.id },
       });
 
@@ -203,6 +207,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
         collection: "sourcing-requests",
         id: requestId,
         overrideAccess: true,
+        context: { sourcingWorkflow: true },
         data: { status: "quote_sent", acceptedAt: null },
       });
       throw error;
