@@ -124,27 +124,27 @@ export function CustomerSourcingRequests() {
         requests.length === 0 ? (
           <div className="rounded-xl border border-dashed p-8 text-center">
             <p className="font-medium text-gray-800">Tu n&apos;as pas encore de demande de devis.</p>
-            <p className="mt-1 text-sm text-gray-600">Envoie une demande pour un équipement ou une pièce qui n'est pas au catalogue.</p>
+            <p className="mt-1 text-sm text-gray-600">Envoie une demande pour un équipement ou une pièce qui n&apos;est pas au catalogue.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {requests.map((request) => {
               const id = String(request.id);
-              const currency = request.quotedCurrency || "XOF";
+              const currency = request.quotedCurrency ?? "XOF";
               const orderId = orderIdOf(request.convertedOrder);
               const canRespond = request.status === "quote_sent";
               return (
                 <article key={id} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{request.requestReference || "Demande"}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{request.requestReference ?? "Demande"}</p>
                       <h2 className="mt-1 text-lg font-semibold text-gray-900">{request.productName ?? "Produit"}</h2>
                       <p className="mt-1 text-sm text-gray-600">
                         {request.brand ? `${request.brand} · ` : ""}{request.model ? `${request.model} · ` : ""}{request.quantity ?? 1} unité(s) · {request.destinationCity}
                       </p>
                     </div>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                      {statusLabels[request.status ?? ""] || request.status ?? "En traitement"}
+                      {statusLabels[request.status ?? ""] ?? request.status ?? "En traitement"}
                     </span>
                   </div>
 
