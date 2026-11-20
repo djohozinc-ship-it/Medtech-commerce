@@ -19,9 +19,7 @@ export const WithInlinePrice = ({ products }: { products: Product[] }) => {
           let pricingComponent: ReactNode;
           if (medtechProduct.salesMode === "quote") {
             pricingComponent = <span className="text-sm font-semibold text-main-700">Sur devis</span>;
-          } else
-
-          if (priceRange?.length === 2) {
+          } else if (priceRange?.length === 2) {
             pricingComponent = (
               <>
                 <PriceClient pricing={priceRange[0]} />
