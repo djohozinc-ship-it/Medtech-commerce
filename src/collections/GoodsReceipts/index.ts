@@ -112,7 +112,7 @@ export const GoodsReceipts: CollectionConfig = {
           if (receivedQuantity < quantity) allReceived = false;
           return { ...item, receivedQuantity };
         });
-        const nextStatus = allReceived && anyReceived ? "received" : anyReceived ? "partially_received" : ["received", "partially_received"].includes(String(purchaseOrder.status)) ? "acknowledged" : purchaseOrder.status;
+        const nextStatus = allReceived && anyReceived ? "received" : anyReceived ? "partially_received" : purchaseOrder.status;
         await payload.update({
           collection: "purchase-orders",
           id: purchaseOrderId,
@@ -120,7 +120,7 @@ export const GoodsReceipts: CollectionConfig = {
           data: {
             items,
             status: nextStatus,
-            ...(nextStatus === "received" ? { receivedAt: new Date().toISOString() } : nextStatus === "acknowledged" ? { receivedAt: null } : {}),
+            ...(nextStatus === "received" ? { receivedAt: new Date().toISOString() } : {}),
           },
         });
         return doc;
