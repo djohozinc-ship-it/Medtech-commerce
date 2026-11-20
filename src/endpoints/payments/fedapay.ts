@@ -1,14 +1,14 @@
 import { type PayloadRequest } from "payload";
 
-type AnyRecord = Record<string, any>;
-const record = (value: unknown): AnyRecord =>
-  value && typeof value === "object" ? value as AnyRecord : {};
+type UnknownRecord = Record<string, unknown>;
+const record = (value: unknown): UnknownRecord =>
+  typeof value === "object" && value !== null ? value as UnknownRecord : {};
 const idOf = (value: unknown): string | undefined => {
   if (typeof value === "string" || typeof value === "number") return String(value);
   const item = record(value);
   return item.id !== undefined ? String(item.id) : undefined;
 };
-const getRemoteTransaction = (body: unknown): AnyRecord => {
+const getRemoteTransaction = (body: unknown): UnknownRecord => {
   const root = record(body);
   return record(root["v1/transaction"] ?? root.transaction ?? root);
 };
@@ -57,7 +57,7 @@ export const createFedaPayPayment = async (req: PayloadRequest) => {
       id: body.orderId,
       depth: 0,
       overrideAccess: true,
-    }) as unknown as AnyRecord;
+    }) as unknown as UnknownRecord;
 
     if (idOf(order.customer) !== String(req.user.id)) {
       return Response.json({ message: "Commande introuvable" }, { status: 404 });
@@ -90,7 +90,7 @@ export const createFedaPayPayment = async (req: PayloadRequest) => {
     let alreadyAllocated = 0;
     let validAllocationCount = 0;
     for (const item of confirmedAllocations.docs) {
-      const allocation = item as unknown as AnyRecord;
+      const allocation = item as unknown as UnknownRecord;
       const cash = record(allocation.cashTransaction);
       if (cash.status !== "confirmed" || cash.transactionType !== "customer_payment") continue;
       if (cash.currency !== allocation.currency) continue;
@@ -178,7 +178,7 @@ const confirmFedaPayTransaction = async (req: PayloadRequest, remoteId: string) 
     overrideAccess: true,
     where: { providerTransactionId: { equals: remoteId } },
   });
-  const attempt = attempts.docs[0] as unknown as AnyRecord | undefined;
+  const attempt = attempts.docs[0] as unknown as UnknownRecord | undefined;
   if (!attempt) return { ok: false, status: 404, message: "Tentative de paiement inconnue" };
 
   const remoteBody = await fedapayRequest(`/transactions/${encodeURIComponent(remoteId)}`, { method: "GET" });
@@ -189,7 +189,8 @@ const confirmFedaPayTransaction = async (req: PayloadRequest, remoteId: string) 
     return { ok: false, status: 400, message: "La devise de la transaction prestataire ne correspond pas à XOF" };
   }
 
-  const attemptId = attempt.id;
+  const attemptId = idOf(attempt.id);
+  if (!attemptId) return { ok: false, status: 400, message: "Identifiant de tentative invalide" };
   const orderId = idOf(attempt.order);
   const amount = Number(attempt.amount);
   if (!orderId || !Number.isFinite(amount) || amount < 1 || Number(remote.amount) !== amount) {
@@ -232,7 +233,7 @@ const confirmFedaPayTransaction = async (req: PayloadRequest, remoteId: string) 
     });
     cashTransactionId = cash.id;
   } else {
-    cashTransactionId = (duplicate.docs[0] as unknown as AnyRecord).id;
+    cashTransactionId = (duplicate.docs[0] as unknown as UnknownRecord).id;
   }
 
   const existingAllocation = await req.payload.find({
@@ -269,7 +270,7 @@ const confirmFedaPayTransaction = async (req: PayloadRequest, remoteId: string) 
     data: {
       status: "paid",
       verifiedAt: new Date().toISOString(),
-      providerPayload: { id: remote.id, status: remote.status, approved_at: remote.approved_at },
+      providerPayload: { id: String(remote.id), status: String(remote.status), approved_at: remote.approved_at },
     },
   });
   return { ok: true, status: 200, paymentStatus: "paid" };
@@ -288,7 +289,7 @@ export const fedapayReturn = async (req: PayloadRequest) => {
       overrideAccess: true,
       where: { providerTransactionId: { equals: remoteId } },
     });
-    const attempt = attempts.docs[0] as unknown as AnyRecord | undefined;
+    const attempt = attempts.docs[0] as unknown as UnknownRecord | undefined;
     const orderId = attempt ? idOf(attempt.order) : undefined;
     if (orderId && process.env.NEXT_PUBLIC_SERVER_URL) {
       const outcome = result.paymentStatus === "paid" ? "success" : "pending";
@@ -334,7 +335,7 @@ export const getCustomerOrderBalance = async (req: PayloadRequest) => {
       id: orderId,
       depth: 0,
       overrideAccess: true,
-    }) as unknown as AnyRecord;
+    }) as unknown as UnknownRecord;
     if (idOf(order.customer) !== String(req.user.id)) {
       return Response.json({ message: "Commande introuvable" }, { status: 404 });
     }
@@ -357,14 +358,14 @@ export const getCustomerOrderBalance = async (req: PayloadRequest) => {
     });
     let paidFromLedger = 0;
     for (const raw of allocations.docs) {
-      const allocation = raw as unknown as AnyRecord;
+      const allocation = raw as unknown as UnknownRecord;
       const cash = record(allocation.cashTransaction);
       if (cash.status !== "confirmed" || cash.transactionType !== "customer_payment") continue;
       if (allocation.currency !== currency) continue;
       paidFromLedger += Number(allocation.amountInOrderCurrency) || 0;
     }
     const paid = allocations.docs.some((raw) => {
-      const allocation = raw as unknown as AnyRecord;
+      const allocation = raw as unknown as UnknownRecord;
       const cash = record(allocation.cashTransaction);
       return cash.status === "confirmed" && cash.transactionType === "customer_payment" && cash.currency === allocation.currency;
     }) ? paidFromLedger : Number(details.amountPaid) || 0;
