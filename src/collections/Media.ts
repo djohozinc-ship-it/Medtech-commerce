@@ -3,7 +3,6 @@ import { fileURLToPath } from "url";
 
 import { FixedToolbarFeature, InlineToolbarFeature, lexicalEditor } from "@payloadcms/richtext-lexical";
 
-import { anyone } from "@/access/anyone";
 import { authenticated } from "@/access/authenticated";
 
 import type { CollectionConfig } from "payload";
@@ -16,7 +15,7 @@ export const Media: CollectionConfig = {
   access: {
     create: authenticated,
     delete: authenticated,
-    read: anyone,
+    read: () => true,
     update: authenticated,
   },
   labels: {
@@ -54,6 +53,7 @@ export const Media: CollectionConfig = {
     },
   ],
   upload: {
+    mimeTypes: ["image/jpeg", "image/png", "image/webp"],
     // Upload to the public/media directory in Next.js making them publicly accessible even outside of Payload
     staticDir: path.resolve(dirname, "../../public/media"),
     adminThumbnail: "thumbnail",
