@@ -65,6 +65,7 @@ export const PurchaseOrders: CollectionConfig = {
         { name: "model", type: "text", label: "Modèle / référence" },
         { name: "supplierSKU", type: "text", label: "SKU fournisseur" },
         { name: "quantity", type: "number", required: true, min: 1, label: "Quantité commandée" },
+        { name: "receivedQuantity", type: "number", min: 0, defaultValue: 0, admin: { readOnly: true }, label: "Quantité réceptionnée cumulée" },
         { name: "unitPrice", type: "number", required: true, min: 0, label: "Prix unitaire dans la devise du bon" },
         { name: "lineTotal", type: "number", admin: { readOnly: true }, label: "Total de la ligne" },
         { name: "technicalRequirements", type: "textarea", label: "Spécifications et exigences qualité" },
