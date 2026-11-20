@@ -120,8 +120,18 @@ export const PurchaseOrders: CollectionConfig = {
   hooks: {
     afterChange: [
       async ({ doc, previousDoc, req }) => {
-        if (doc.status !== "sent_to_supplier" || previousDoc?.status === "sent_to_supplier") return doc;
         const payload = req.payload as any;
+        const relationId = (value: unknown) =>
+          typeof value === "object" && value !== null ? String((value as { id?: string | number }).id ?? "") : String(value ?? "");
+        const currentOfferId = relationId(doc.supplierOffer);
+        const previousOfferId = relationId(previousDoc?.supplierOffer);
+        if (previousOfferId && previousOfferId !== currentOfferId) {
+          await payload.update({ collection: "supplier-offers", id: previousOfferId, overrideAccess: true, data: { purchaseOrder: null } });
+        }
+        if (currentOfferId) {
+          await payload.update({ collection: "supplier-offers", id: currentOfferId, overrideAccess: true, data: { purchaseOrder: doc.id } });
+        }
+        if (doc.status !== "sent_to_supplier" || previousDoc?.status === "sent_to_supplier") return doc;
         const supplierId = typeof doc.supplier === "object" ? doc.supplier?.id : doc.supplier;
         if (!supplierId) return doc;
         const supplier = await payload.findByID({
@@ -211,6 +221,10 @@ export const PurchaseOrders: CollectionConfig = {
           const supplierValue = data.supplier ?? originalDoc?.supplier;
           const supplierId = typeof supplierValue === "object" && supplierValue !== null ? (supplierValue as { id?: string | number }).id : supplierValue;
           const offerSupplierId = typeof offer.supplier === "object" && offer.supplier !== null ? offer.supplier.id : offer.supplier;
+          const existingPurchaseOrder = typeof offer.purchaseOrder === "object" && offer.purchaseOrder !== null ? offer.purchaseOrder.id : offer.purchaseOrder;
+          if (existingPurchaseOrder && String(existingPurchaseOrder) !== String(originalDoc?.id ?? "")) {
+            throw new Error("Cette offre fournisseur est déjà rattachée à un autre bon de commande.");
+          }
           if (String(supplierId) !== String(offerSupplierId)) {
             throw new Error("Le fournisseur du bon de commande doit correspondre au fournisseur de l'offre retenue.");
           }
