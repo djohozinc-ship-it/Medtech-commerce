@@ -49,7 +49,7 @@ export const WarehouseInspections: CollectionConfig = {
         const receiptValue = data.goodsReceipt ?? originalDoc?.goodsReceipt;
         const receiptId = typeof receiptValue === "object" && receiptValue ? receiptValue.id : receiptValue;
         if (receiptId) {
-          const receipt = await (req.payload as any).findByID({
+          const receipt = await req.payload.findByID({
             collection: "goods-receipts", id: receiptId, depth: 0, overrideAccess: true,
           });
           if (!receipt) throw new Error("La réception fournisseur liée à ce contrôle est introuvable.");
@@ -103,7 +103,7 @@ export const WarehouseInspections: CollectionConfig = {
         const status = doc.result === "passed" ? "accepted"
           : doc.result === "passed_with_reservations" ? "accepted_with_reservations"
           : doc.result === "failed" ? "rejected" : "pending_inspection";
-        await (req.payload as any).update({
+        await req.payload.update({
           collection: "goods-receipts",
           id: receiptId,
           overrideAccess: true,
