@@ -124,17 +124,35 @@ export const InboundShipments: CollectionConfig = {
         const eventStatus: Record<string, string> = {
           received_china: "arrived_china_warehouse",
           consolidation: "consolidated",
+          ready_to_ship: "consolidated",
           shipped: "departed_china",
           arrived_benin: "arrived_benin",
           customs: "customs_clearance",
+          received_benin: "ready_for_delivery",
         };
         const mapped = eventStatus[String(doc.status)];
         if (!mapped) return doc;
         const payload = req.payload as any;
-        const orders = Array.isArray(doc.orders) ? doc.orders : [];
-        for (const orderValue of orders) {
+        const orderIds = new Set<string>();
+        for (const orderValue of Array.isArray(doc.orders) ? doc.orders : []) {
           const orderId = typeof orderValue === "object" && orderValue ? orderValue.id : orderValue;
-          if (!orderId) continue;
+          if (orderId) orderIds.add(String(orderId));
+        }
+        if (orderIds.size === 0) {
+          for (const purchaseOrderValue of Array.isArray(doc.purchaseOrders) ? doc.purchaseOrders : []) {
+            const purchaseOrderId = typeof purchaseOrderValue === "object" && purchaseOrderValue ? purchaseOrderValue.id : purchaseOrderValue;
+            if (!purchaseOrderId) continue;
+            const purchaseOrder = await payload.findByID({ collection: "purchase-orders", id: purchaseOrderId, depth: 0, overrideAccess: true });
+            const requestValue = purchaseOrder?.sourcingRequest;
+            const requestId = typeof requestValue === "object" && requestValue ? requestValue.id : requestValue;
+            if (!requestId) continue;
+            const request = await payload.findByID({ collection: "sourcing-requests", id: requestId, depth: 0, overrideAccess: true });
+            const orderValue = request?.convertedOrder;
+            const orderId = typeof orderValue === "object" && orderValue ? orderValue.id : orderValue;
+            if (orderId) orderIds.add(String(orderId));
+          }
+        }
+        for (const orderId of orderIds) {
           await payload.create({
             collection: "shipment-events",
             overrideAccess: true,
@@ -144,7 +162,7 @@ export const InboundShipments: CollectionConfig = {
               order: orderId,
               status: mapped,
               eventDate: new Date().toISOString(),
-              location: doc.status === "arrived_benin" || doc.status === "customs" ? "Bénin" : "Chine",
+              location: ["arrived_benin", "customs", "received_benin"].includes(String(doc.status)) ? "Bénin" : "Chine",
               carrier: doc.freightForwarder,
               trackingCode: doc.trackingNumber,
               trackingUrl: doc.trackingUrl,
