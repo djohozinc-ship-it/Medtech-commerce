@@ -26,9 +26,12 @@ export const getFinanceSummary = async (req: PayloadRequest) => {
   }
 
   try {
-    const dates = req.json && ((await req.json()) as { dateFrom?: string; dateTo?: string });
-    const from = dates?.dateFrom ? new Date(dates.dateFrom) : undefined;
-    const to = dates?.dateTo ? new Date(dates.dateTo) : undefined;
+    const rawDates: unknown = typeof req.json === "function" ? await req.json() : undefined;
+    const dates = typeof rawDates === "object" && rawDates !== null ? rawDates as { dateFrom?: unknown; dateTo?: unknown } : undefined;
+    const dateFrom = typeof dates?.dateFrom === "string" ? dates.dateFrom : undefined;
+    const dateTo = typeof dates?.dateTo === "string" ? dates.dateTo : undefined;
+    const from = dateFrom ? new Date(dateFrom) : undefined;
+    const to = dateTo ? new Date(dateTo) : undefined;
 
     if ((from && Number.isNaN(from.getTime())) || (to && Number.isNaN(to.getTime()))) {
       return Response.json({ message: "Invalid date range" }, { status: 400 });
@@ -109,8 +112,8 @@ export const getFinanceSummary = async (req: PayloadRequest) => {
     const result: FinanceSummary = {
       currency: "XOF",
       period: {
-        from: dates?.dateFrom,
-        to: dates?.dateTo,
+        from: dateFrom,
+        to: dateTo,
       },
       confirmedCustomerReceiptsXOF: Math.round(receipts),
       confirmedRefundsXOF: Math.round(refunds),
