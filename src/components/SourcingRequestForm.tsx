@@ -8,6 +8,18 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
 type FormState = "idle" | "uploading" | "sending" | "success" | "error";
+type ApiResponse = {
+  doc?: { id?: string | number; requestReference?: string };
+  errors?: { message?: string }[];
+};
+
+const formString = (data: FormData, name: string): string => {
+  const value = data.get(name);
+  return typeof value === "string" ? value : "";
+};
+
+const apiError = (result: ApiResponse, fallback: string): string =>
+  result.errors?.find((entry) => typeof entry.message === "string")?.message ?? fallback;
 
 export function SourcingRequestForm() {
   const searchParams = useSearchParams();
@@ -23,13 +35,13 @@ export function SourcingRequestForm() {
     const form = event.currentTarget;
     const data = new FormData(form);
 
-    const productName = String(data.get("productName") || "").trim();
-    const specifications = String(data.get("specifications") || "").trim();
-    const customerName = String(data.get("customerName") || "").trim();
-    const customerEmail = String(data.get("customerEmail") || "").trim();
-    const customerPhone = String(data.get("customerPhone") || "").trim();
+    const productName = formString(data, "productName").trim();
+    const specifications = formString(data, "specifications").trim();
+    const customerName = formString(data, "customerName").trim();
+    const customerEmail = formString(data, "customerEmail").trim();
+    const customerPhone = formString(data, "customerPhone").trim();
     const quantity = Number(data.get("quantity"));
-    const destinationCity = String(data.get("destinationCity") || "").trim();
+    const destinationCity = formString(data, "destinationCity").trim();
 
     if (!productName || !specifications || !customerName || !customerEmail || !customerPhone || !destinationCity || !Number.isInteger(quantity) || quantity < 1) {
       setState("error");
@@ -54,28 +66,29 @@ export function SourcingRequestForm() {
             method: "POST",
             body: upload,
           });
-          const uploadResult = await uploadResponse.json();
-          if (!uploadResponse.ok || !uploadResult?.doc?.id) {
-            throw new Error(uploadResult?.errors?.[0]?.message || "Un fichier n'a pas pu être envoyé.");
+          const uploadResult = await uploadResponse.json() as ApiResponse;
+          if (!uploadResponse.ok || !uploadResult.doc?.id) {
+            throw new Error(apiError(uploadResult, "Un fichier n'a pas pu être envoyé."));
           }
           attachmentIds.push({ file: String(uploadResult.doc.id), description: file.name });
         }
       }
 
       setState("sending");
+      const budgetRaw = formString(data, "budgetAmount").trim();
       const requestBody = {
         customerName,
         customerEmail: customerEmail.toLowerCase(),
         customerPhone,
         productName,
-        brand: String(data.get("brand") || ""),
-        model: String(data.get("model") || ""),
+        brand: formString(data, "brand"),
+        model: formString(data, "model"),
         specifications,
-        referenceUrl: String(data.get("referenceUrl") || ""),
+        referenceUrl: formString(data, "referenceUrl"),
         quantity,
         destinationCity,
-        budgetAmount: data.get("budgetAmount") ? Number(data.get("budgetAmount")) : undefined,
-        budgetCurrency: String(data.get("budgetCurrency") || "XOF"),
+        budgetAmount: budgetRaw ? Number(budgetRaw) : undefined,
+        budgetCurrency: formString(data, "budgetCurrency") || "XOF",
         attachments: attachmentIds,
       };
 
@@ -84,9 +97,9 @@ export function SourcingRequestForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
-      const result = await response.json();
-      if (!response.ok || !result?.doc?.id) {
-        throw new Error(result?.errors?.[0]?.message || "La demande n'a pas pu être enregistrée.");
+      const result = await response.json() as ApiResponse;
+      if (!response.ok || !result.doc?.id) {
+        throw new Error(apiError(result, "La demande n'a pas pu être enregistrée."));
       }
       setState("success");
       const reference = result.doc.requestReference ? ` Référence : ${result.doc.requestReference}.` : "";
@@ -184,7 +197,7 @@ export function SourcingRequestForm() {
       <button type="submit" disabled={busy} className="w-full rounded-xl bg-slate-900 px-6 py-4 font-semibold text-white disabled:opacity-60">
         {state === "uploading" ? "Envoi des fichiers..." : state === "sending" ? "Enregistrement de la demande..." : "Envoyer ma demande"}
       </button>
-      <p className="text-xs text-gray-500">En envoyant ce formulaire, tu autorises l'équipe à utiliser ces informations pour traiter ta demande de sourcing.</p>
+      <p className="text-xs text-gray-500">En envoyant ce formulaire, tu autorises l'équipe à utiliser ces informations pour traiter ta demande.</p>
     </form>
   );
 }
