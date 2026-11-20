@@ -214,7 +214,7 @@ export const InboundShipments: CollectionConfig = {
             inboundShipment: doc.id,
             order: orderId,
             status: mapped,
-            ...(statusChanged || !existingEvent ? { eventDate: new Date().toISOString() } : {}),
+            eventDate: existingEvent?.eventDate || new Date().toISOString(),
             location: ["arrived_benin", "customs", "received_benin"].includes(String(doc.status)) ? "Bénin" : "Chine",
             ...(doc.freightForwarder ? { carrier: doc.freightForwarder } : {}),
             ...(doc.trackingNumber ? { trackingCode: doc.trackingNumber } : {}),
