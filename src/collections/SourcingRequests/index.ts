@@ -348,7 +348,10 @@ export const SourcingRequests: CollectionConfig = {
             if (typeof amount !== "number" || amount <= 0) {
               throw new Error("Renseignez un montant de devis positif avant de l'envoyer.");
             }
-            if (validUntil && new Date(validUntil).getTime() < Date.now()) {
+            if (!validUntil) {
+              throw new Error("Renseignez une date limite de validité avant d’envoyer le devis.");
+            }
+            if (new Date(validUntil).getTime() < Date.now()) {
               throw new Error("La date de validité du devis doit être future.");
             }
           }
