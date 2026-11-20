@@ -65,7 +65,7 @@ export const CustomerShipmentTracking = ({ orderId }: { orderId: string }) => {
     <section className="mt-8 rounded-lg border border-gray-200 p-5">
       <h2 className="text-lg font-semibold text-gray-900">Suivi de votre commande</h2>
       {loading && <p className="mt-3 text-sm text-gray-500">Chargement des étapes logistiques…</p>}
-      {error && <p role="alert" className="mt-3 text-sm text-red-600">Le suivi n'est pas disponible pour le moment.</p>}
+      {error && <p role="alert" className="mt-3 text-sm text-red-600">Le suivi n&apos;est pas disponible pour le moment.</p>}
       {!loading && !error && events.length === 0 && (
         <p className="mt-3 text-sm text-gray-600">
           Le suivi détaillé sera affiché dès que la première étape logistique aura été enregistrée.
