@@ -1,14 +1,26 @@
 import { revalidateTag } from "next/cache";
-import { type CollectionConfig } from "payload";
+import { type Access, type CollectionConfig } from "payload";
 
 import { countryList } from "@/globals/(ecommerce)/Couriers/utils/countryList";
 
 import { createTokenAndSendEmail } from "./hooks/createTokenAndSendEmail";
 
+const customerOrAdministrator: Access = ({ req }) => {
+  if (req.user?.collection === "administrators") return true;
+  if (req.user?.collection === "customers") return { id: { equals: req.user.id } };
+  return false;
+};
+
+const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
+
 export const Customers: CollectionConfig = {
   slug: "customers",
   access: {
+    admin: administratorsOnly,
     create: () => true,
+    read: customerOrAdministrator,
+    update: customerOrAdministrator,
+    delete: administratorsOnly,
   },
   labels: {
     singular: {
