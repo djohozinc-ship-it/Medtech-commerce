@@ -29,7 +29,7 @@ export const getMySourcingRequests = async (req: PayloadRequest) => {
     return Response.json({ message: "Connexion client requise" }, { status: 401 });
   }
 
-  const payload = req.payload as any;
+  const payload = req.payload;
   try {
     const result = await payload.find({
       collection: "sourcing-requests",
@@ -96,7 +96,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
     return Response.json({ message: "Demande ou action invalide" }, { status: 400 });
   }
 
-  const payload = req.payload as any;
+  const payload = req.payload;
   try {
     const sourcingRequest = await payload.findByID({
       collection: "sourcing-requests",
