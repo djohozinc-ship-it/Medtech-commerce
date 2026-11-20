@@ -42,14 +42,15 @@ const hasValue = (value: string | number | null | undefined): value is string | 
   value !== null && value !== undefined && String(value).trim() !== "";
 
 const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
+  const t = useTranslations("ProductDetails");
   const rows: [string, string | number | null | undefined][] = [
-    ["Fabricant", product.manufacturer],
-    ["Marque", product.brand],
-    ["Modèle / référence", product.modelReference],
-    ["Pays d’origine", product.originCountry],
-    ["Garantie", hasValue(product.warrantyMonths) ? `${product.warrantyMonths} mois` : null],
-    ["Délai estimé d’approvisionnement", hasValue(product.leadTimeDays) ? `${product.leadTimeDays} jours` : null],
-    ["Disponibilité", product.availabilityMode === "in_stock" ? "En stock (à confirmer avant commande)" : product.availabilityMode === "on_order" ? "Sur commande" : product.availabilityMode === "to_confirm" ? "À confirmer" : null],
+    [t("manufacturer"), product.manufacturer],
+    [t("brand"), product.brand],
+    [t("model-reference"), product.modelReference],
+    [t("origin-country"), product.originCountry],
+    [t("warranty"), hasValue(product.warrantyMonths) ? `${product.warrantyMonths} months` : null],
+    [t("lead-time"), hasValue(product.leadTimeDays) ? `${product.leadTimeDays} days` : null],
+    [t("availability"), product.availabilityMode === "in_stock" ? t("in-stock-confirm") : product.availabilityMode === "on_order" ? t("on-order") : product.availabilityMode === "to_confirm" ? t("to-confirm") : null],
   ].filter((row): row is [string, string | number] => hasValue(row[1]));
 
   const documents = (product.regulatoryDocuments ?? []).filter(
@@ -63,7 +64,7 @@ const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
 
   return (
     <section className="mt-10 rounded-xl border border-gray-200 p-5" aria-labelledby="technical-sheet-title">
-      <h2 id="technical-sheet-title" className="text-xl font-semibold text-gray-900">Fiche technique</h2>
+      <h2 id="technical-sheet-title" className="text-xl font-semibold text-gray-900">{t("technical-sheet")}</h2>
       {rows.length > 0 && (
         <dl className="mt-4 divide-y divide-gray-100">
           {rows.map(([label, value]) => (
@@ -76,7 +77,7 @@ const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
       )}
       {product.technicalSpecs && product.technicalSpecs.length > 0 && (
         <div className="mt-5">
-          <h3 className="font-semibold text-gray-900">Caractéristiques détaillées</h3>
+          <h3 className="font-semibold text-gray-900">{t("detailed-specs")}</h3>
           <dl className="mt-2 divide-y divide-gray-100">
             {product.technicalSpecs.map((spec, index) => (
               <div key={spec.id ?? `${spec.label}-${index}`} className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-2">
@@ -89,13 +90,13 @@ const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
       )}
       {product.technicalSpecifications && (
         <div className="mt-5">
-          <h3 className="font-semibold text-gray-900">Notes techniques et compatibilité</h3>
+          <h3 className="font-semibold text-gray-900">{t("technical-notes")}</h3>
           <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-700">{product.technicalSpecifications}</p>
         </div>
       )}
       {documents.length > 0 && (
         <div className="mt-5">
-          <h3 className="font-semibold text-gray-900">Documents disponibles</h3>
+          <h3 className="font-semibold text-gray-900">{t("documents-available")}</h3>
           <ul className="mt-2 space-y-2">
             {documents.map((document, index) => (
               <li key={document.id ?? document.url ?? index}>
@@ -105,7 +106,7 @@ const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
                   rel="noreferrer"
                   className="text-sm font-medium text-main-700 underline underline-offset-2"
                 >
-                  {document.alt || document.filename || `Document technique ${index + 1}`}
+                  {document.alt || document.filename || `Technical document ${index + 1}`}
                 </a>
                 {document.mimeType === "application/pdf" && <span className="ml-2 text-xs text-gray-500">PDF</span>}
               </li>
@@ -114,7 +115,7 @@ const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
         </div>
       )}
       <p className="mt-5 text-xs leading-5 text-gray-500">
-        Les caractéristiques et documents affichés sont ceux renseignés et fournis pour cette référence. Vérifiez la compatibilité, la disponibilité et les justificatifs applicables avant toute commande.
+        {t("verification-note")}
       </p>
     </section>
   );
