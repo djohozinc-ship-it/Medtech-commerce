@@ -38,7 +38,10 @@
     "technical-notes": "Uwagi techniczne i zgodność",
     "documents-available": "Dostępne dokumenty",
     "verification-note": "Wyświetlone parametry i dokumenty pochodzą z informacji dostarczonych dla tego produktu. Przed zamówieniem sprawdź zgodność, dostępność i wymagane dokumenty.",
-    "quote": "Zapytaj o ofertę"
+    "quote": "Zapytaj o ofertę",
+    "month-unit": "miesięcy",
+    "day-unit": "dni",
+    "document-label": "Dokument techniczny"
   },
   "ProductList": {
     "variants-singular": "wariant",
