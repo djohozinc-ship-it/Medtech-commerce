@@ -41,8 +41,8 @@ export const Customers: CollectionConfig = {
     useAsTitle: "fullName",
   },
   auth: {
-    maxLoginAttempts: 30,
-    lockTime: 30 * 1000,
+    maxLoginAttempts: 5,
+    lockTime: 15 * 60 * 1000,
     verify: true,
   },
   hooks: {
