@@ -17,6 +17,24 @@ import { sendStatusEmail } from "./hooks/sendStatusEmail";
 
 export const Orders: CollectionConfig = {
   slug: "orders",
+  access: {
+    // Le checkout public du template doit pouvoir créer une commande.
+    // Les règles de validation des prix et du paiement restent à auditer côté serveur.
+    create: () => true,
+    read: ({ req }) => {
+      if (req.user?.collection === "administrators") return true;
+      if (req.user?.collection === "customers") {
+        return {
+          customer: {
+            equals: req.user.id,
+          },
+        };
+      }
+      return false;
+    },
+    update: ({ req }) => req.user?.collection === "administrators",
+    delete: ({ req }) => req.user?.collection === "administrators",
+  },
   admin: {
     useAsTitle: "id",
     group: {
