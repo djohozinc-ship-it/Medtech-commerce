@@ -361,12 +361,14 @@ export const Orders: CollectionConfig = {
                     },
                     {
                       name: "country",
-                      type: "select",
+                      type: "text",
                       label: {
                         en: "Country",
                         pl: "Kraj",
                       },
-                      options: [...countryList],
+                      validate: (value) =>
+                        countryList.some((country) => country.value === value) ||
+                        "Select a supported country.",
                       admin: {
                         width: "50%",
                       },
@@ -568,12 +570,14 @@ export const Orders: CollectionConfig = {
                     },
                     {
                       name: "country",
-                      type: "select",
+                      type: "text",
                       label: {
                         en: "Country",
                         pl: "Kraj",
                       },
-                      options: [...countryList],
+                      validate: (value) =>
+                        countryList.some((country) => country.value === value) ||
+                        "Select a supported country.",
                       admin: {
                         width: "50%",
                       },
