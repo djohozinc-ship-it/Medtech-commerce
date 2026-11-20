@@ -84,6 +84,7 @@ export const CashTransactions: CollectionConfig = {
     { name: "customer", type: "relationship", relationTo: "customers", label: "Client concerné" },
     { name: "order", type: "relationship", relationTo: "orders", label: "Commande concernée" },
     { name: "supplier", type: "relationship", relationTo: "suppliers", label: "Fournisseur concerné" },
+    { name: "purchaseOrder", type: "relationship", relationTo: "purchase-orders", label: "Bon de commande fournisseur concerné" },
     { name: "supplierOffer", type: "relationship", relationTo: "supplier-offers", label: "Offre fournisseur concernée" },
     { name: "shipment", type: "relationship", relationTo: "inbound-shipments", label: "Expédition concernée" },
     {
