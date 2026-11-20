@@ -117,7 +117,7 @@ export const InboundShipments: CollectionConfig = {
           if (!Array.isArray(purchaseOrderValues) || purchaseOrderValues.length === 0) {
             throw new Error("Rattachez au moins un bon de commande fournisseur à l'expédition.");
           }
-          const payload = req.payload as any;
+          const payload = req.payload;
           for (const value of purchaseOrderValues) {
             const id = typeof value === "object" && value ? value.id : value;
             if (!id) continue;
@@ -132,7 +132,7 @@ export const InboundShipments: CollectionConfig = {
         const originId = typeof originValue === "object" && originValue ? originValue.id : originValue;
         const destinationId = typeof destinationValue === "object" && destinationValue ? destinationValue.id : destinationValue;
         if (originId && destinationId) {
-          const payload = req.payload as any;
+          const payload = req.payload;
           const [origin, destination] = await Promise.all([
             payload.findByID({ collection: "warehouses", id: originId, depth: 0, overrideAccess: true }),
             payload.findByID({ collection: "warehouses", id: destinationId, depth: 0, overrideAccess: true }),
@@ -164,7 +164,7 @@ export const InboundShipments: CollectionConfig = {
         const mapped = eventStatus[String(doc.status)];
         if (!mapped) return doc;
 
-        const payload = req.payload as any;
+        const payload = req.payload;
         const orderIds = new Set<string>();
         const relationId = (value: unknown): string | undefined => {
           if (typeof value === "string" || typeof value === "number") return String(value);
