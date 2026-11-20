@@ -4,7 +4,7 @@ import { type Locale } from "@/i18n/config";
 import { type Order } from "@/payload-types";
 import config from "@/payload.config";
 
-export const getOrderProducts = async (orderProducts: Order["products"] | null, locale: Locale) => {
+export const getOrderProducts = async (orderProducts: Order["products"] | null, locale: Locale): Promise<any[] | null> => {
   try {
     const payload = await getPayload({ config });
     console.log(orderProducts);
