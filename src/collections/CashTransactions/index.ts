@@ -245,8 +245,12 @@ export const CashTransactions: CollectionConfig = {
     afterChange: [
       async ({ doc, previousDoc, req }) => {
         const payload = req.payload;
-        const relationId = (value: unknown) =>
-          typeof value === "object" && value !== null ? String((value as { id?: string | number }).id ?? "") : String(value ?? "");
+        const relationId = (value: unknown): string => {
+          if (typeof value === "string" || typeof value === "number") return String(value);
+          if (typeof value !== "object" || value === null || !("id" in value)) return "";
+          const id = value.id;
+          return typeof id === "string" || typeof id === "number" ? String(id) : "";
+        };
         const ids = [...new Set([relationId(doc.purchaseOrder), relationId(previousDoc?.purchaseOrder)].filter(Boolean))];
         for (const purchaseOrderId of ids) {
           const purchaseOrder = await payload.findByID({
