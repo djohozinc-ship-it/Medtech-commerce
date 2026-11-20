@@ -3,10 +3,12 @@ import { type PayloadRequest } from "payload";
 type UnknownRecord = Record<string, unknown>;
 const record = (value: unknown): UnknownRecord =>
   typeof value === "object" && value !== null ? value as UnknownRecord : {};
+const primitiveString = (value: unknown): string | undefined =>
+  typeof value === "string" || typeof value === "number" ? String(value) : undefined;
 const idOf = (value: unknown): string | undefined => {
-  if (typeof value === "string" || typeof value === "number") return String(value);
-  const item = record(value);
-  return item.id !== undefined ? String(item.id) : undefined;
+  const direct = primitiveString(value);
+  if (direct !== undefined) return direct;
+  return primitiveString(record(value).id);
 };
 const getRemoteTransaction = (body: unknown): UnknownRecord => {
   const root = record(body);
@@ -34,7 +36,7 @@ const fedapayRequest = async (path: string, init: RequestInit = {}) => {
     },
     cache: "no-store",
   });
-  const body = await response.json().catch(() => ({}));
+  const body: unknown = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(`FedaPay request failed with status ${response.status}`);
   }
@@ -64,7 +66,7 @@ export const createFedaPayPayment = async (req: PayloadRequest) => {
     }
 
     const details = record(order.orderDetails);
-    const currency = String(details.currency ?? "");
+    const currency = primitiveString(details.currency) ?? "";
     if (currency !== "XOF") {
       return Response.json({ message: "FedaPay accepte ici uniquement les commandes en XOF." }, { status: 400 });
     }
@@ -109,8 +111,8 @@ export const createFedaPayPayment = async (req: PayloadRequest) => {
     const fullName = String(address.name ?? "Client Medtech Commerce").trim().split(/\s+/);
     const firstname = fullName[0] || "Client";
     const lastname = fullName.slice(1).join(" ") || "Medtech Commerce";
-    const email = String(address.email ?? "");
-    const phone = String(address.phone ?? "");
+    const email = primitiveString(address.email) ?? "";
+    const phone = primitiveString(address.phone) ?? "";
     if (!email || !phone) {
       return Response.json({ message: "L'adresse e-mail et le téléphone du client sont requis pour le paiement." }, { status: 400 });
     }
@@ -133,12 +135,12 @@ export const createFedaPayPayment = async (req: PayloadRequest) => {
     });
 
     const remote = getRemoteTransaction(transactionBody);
-    const remoteId = remote.id;
-    if (remoteId === undefined || remoteId === null) {
+    const remoteId = primitiveString(remote.id);
+    if (remoteId === undefined) {
       throw new Error("FedaPay response did not include a transaction ID");
     }
 
-    const tokenBody = record(await fedapayRequest(`/transactions/${encodeURIComponent(String(remoteId))}/token`, { method: "POST", body: "{}" }));
+    const tokenBody = record(await fedapayRequest(`/transactions/${encodeURIComponent(remoteId)}/token`, { method: "POST", body: "{}" }));
     const token = record(tokenBody["v1/token"] ?? tokenBody.token ?? tokenBody);
     const paymentUrl = token.url;
     if (typeof paymentUrl !== "string" || !paymentUrl.startsWith("https://")) {
@@ -147,7 +149,7 @@ export const createFedaPayPayment = async (req: PayloadRequest) => {
 
     const orderRecordId = idOf(order.id);
     if (!orderRecordId) throw new Error("Invalid order identifier");
-    const reference = `FDP-${orderRecordId}-${String(remoteId)}`;
+    const reference = `FDP-${orderRecordId}-${remoteId}`;
     await req.payload.create({
       collection: "payment-attempts",
       overrideAccess: true,
@@ -315,11 +317,11 @@ export const fedapayWebhook = async (req: PayloadRequest) => {
     const body = record(await readRequestJson(req));
     const data = record(body["v1/event"] ?? body.event ?? body);
     const entity = record(data.entity ?? data.object ?? data);
-    const remoteId = entity.id ?? record(entity.transaction).id;
-    if (remoteId === undefined || remoteId === null) {
+    const remoteId = primitiveString(entity.id ?? record(entity.transaction).id);
+    if (remoteId === undefined) {
       return Response.json({ message: "Identifiant de transaction manquant" }, { status: 400 });
     }
-    const result = await confirmFedaPayTransaction(req, String(remoteId));
+    const result = await confirmFedaPayTransaction(req, remoteId);
     return Response.json(result, { status: result.status });
   } catch (error) {
     req.payload.logger.error({ err: error, msg: "Unable to process FedaPay webhook" });
@@ -344,7 +346,7 @@ export const getCustomerOrderBalance = async (req: PayloadRequest) => {
       return Response.json({ message: "Commande introuvable" }, { status: 404 });
     }
     const details = record(order.orderDetails);
-    const currency = String(details.currency ?? "");
+    const currency = primitiveString(details.currency) ?? "";
     const total = Number(details.totalWithShipping);
     if (!Number.isFinite(total) || total < 0) {
       return Response.json({ message: "Montant de commande invalide" }, { status: 400 });
