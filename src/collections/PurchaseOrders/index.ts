@@ -274,7 +274,7 @@ export const PurchaseOrders: CollectionConfig = {
         for (const item of items as PurchaseLine[]) {
           const quantity = numeric(item.quantity);
           const unitPrice = numeric(item.unitPrice);
-          if (quantity === undefined || quantity < 1 || unitPrice === undefined || unitPrice < 0) {
+          if (quantity === undefined || !Number.isInteger(quantity) || quantity < 1 || unitPrice === undefined || unitPrice < 0) {
             throw new Error("Chaque ligne d'achat doit avoir une quantité positive et un prix unitaire valide.");
           }
           item.lineTotal = Math.round(quantity * unitPrice * 100) / 100;
