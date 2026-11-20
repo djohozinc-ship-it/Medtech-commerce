@@ -186,22 +186,42 @@ export const PurchaseOrders: CollectionConfig = {
         data.totalAmount = Math.round((subtotal + domestic + other) * 100) / 100;
 
         const status = data.status ?? originalDoc?.status;
-        if (status === "approved" && originalDoc?.status !== "approved") {
+        const previousStatus = originalDoc?.status ?? "draft";
+        if (status !== previousStatus) {
+          const allowed: Record<string, string[]> = {
+            draft: ["awaiting_approval", "cancelled"],
+            awaiting_approval: ["draft", "approved", "cancelled"],
+            approved: ["draft", "sent_to_supplier", "cancelled"],
+            sent_to_supplier: ["acknowledged", "cancelled"],
+            acknowledged: ["partially_received", "received", "cancelled"],
+            partially_received: ["received", "cancelled"],
+            received: [],
+            cancelled: [],
+          };
+          if (!(allowed[previousStatus] ?? []).includes(String(status))) {
+            throw new Error(`Transition impossible du bon de commande : ${previousStatus} → ${String(status)}.`);
+          }
+        }
+        if (status === "approved" && previousStatus !== "approved") {
           data.approvalName = req.user?.email ?? "Administrateur";
           data.approvedAt = new Date().toISOString();
         }
-        if (status === "sent_to_supplier" && !data.sentAt && !originalDoc?.sentAt) {
-          throw new Error("Renseignez la date d'envoi avant de passer le bon à « Envoyé au fournisseur ».");
-        }
-        if (status === "acknowledged" && !data.acknowledgedAt && !originalDoc?.acknowledgedAt) {
-          throw new Error("Renseignez la date de confirmation du fournisseur.");
-        }
-        if (status === "received" && !data.receivedAt && !originalDoc?.receivedAt) {
-          throw new Error("Renseignez la date de réception complète.");
-        }
-        if (status === "sent_to_supplier" || status === "acknowledged" || status === "partially_received" || status === "received") {
+        if (status === "sent_to_supplier") {
           if (!(data.approvedAt ?? originalDoc?.approvedAt)) {
             throw new Error("Le bon doit être validé en interne avant son envoi au fournisseur.");
+          }
+          if (!(data.sentAt ?? originalDoc?.sentAt)) {
+            throw new Error("Renseignez la date d'envoi avant de passer le bon à « Envoyé au fournisseur ».");
+          }
+        }
+        if (status === "acknowledged") {
+          if (!(data.sentAt ?? originalDoc?.sentAt)) throw new Error("Le bon doit d'abord être envoyé au fournisseur.");
+          if (!(data.acknowledgedAt ?? originalDoc?.acknowledgedAt)) throw new Error("Renseignez la date de confirmation du fournisseur.");
+        }
+        if (status === "partially_received" || status === "received") {
+          if (!(data.acknowledgedAt ?? originalDoc?.acknowledgedAt)) throw new Error("La confirmation du fournisseur est nécessaire avant la réception.");
+          if (status === "received" && !(data.receivedAt ?? originalDoc?.receivedAt)) {
+            throw new Error("Renseignez la date de réception complète.");
           }
         }
         return data;
