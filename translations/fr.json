@@ -38,7 +38,10 @@
     "technical-notes": "Notes techniques et compatibilité",
     "documents-available": "Documents disponibles",
     "verification-note": "Les caractéristiques et documents affichés sont ceux renseignés et fournis pour cette référence. Vérifiez la compatibilité, la disponibilité et les justificatifs applicables avant toute commande.",
-    "quote": "Sur devis"
+    "quote": "Sur devis",
+    "month-unit": "mois",
+    "day-unit": "jours",
+    "document-label": "Document technique"
   },
   "ProductList": {
     "variants-singular": "variant",
