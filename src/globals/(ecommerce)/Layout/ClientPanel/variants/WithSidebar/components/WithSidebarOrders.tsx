@@ -67,14 +67,17 @@ export const WithSidebarOrders = async () => {
                 const image = variantImage && typeof variantImage !== "string" ? variantImage : productImage;
 
                 return (
-                  image && (
-                    <Media
-                      key={`${product.id}-${product.variantSlug}`}
-                      alt={product.productName ?? ""}
-                      resource={image}
-                      className="aspect-square w-20 rounded-[6px] border object-cover shadow-xs"
-                    />
-                  )
+                  <div key={`${product.id}-${product.variantSlug}`} className="flex items-center gap-2">
+                    {image ? (
+                      <Media
+                        alt={product.productName ?? ""}
+                        resource={image}
+                        className="aspect-square w-20 rounded-[6px] border object-cover shadow-xs"
+                      />
+                    ) : (
+                      <span className="max-w-48 text-sm font-medium text-gray-700">{product.productName ?? "Produit sur devis"}</span>
+                    )}
+                  </div>
                 );
               })}
             </div>
