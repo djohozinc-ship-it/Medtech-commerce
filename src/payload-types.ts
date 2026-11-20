@@ -2816,7 +2816,7 @@ export interface ShopSetting {
   /**
    * First currency is the default one
    */
-  availableCurrencies: ('USD' | 'EUR' | 'GBP' | 'PLN')[];
+  availableCurrencies: ('USD' | 'EUR' | 'GBP' | 'PLN' | 'XOF')[];
   currencyValues?:
     | {
         currency: string;
