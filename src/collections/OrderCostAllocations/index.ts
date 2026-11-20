@@ -24,6 +24,7 @@ export const OrderCostAllocations: CollectionConfig = {
     { name: "order", type: "relationship", relationTo: "orders", required: true, label: "Commande bénéficiaire" },
     { name: "shipment", type: "relationship", relationTo: "inbound-shipments", label: "Expédition d'origine" },
     { name: "cashTransaction", type: "relationship", relationTo: "cash-transactions", label: "Dépense source enregistrée" },
+    { name: "purchaseOrder", type: "relationship", relationTo: "purchase-orders", label: "Bon de commande fournisseur source" },
     {
       name: "costCategory",
       type: "select",
