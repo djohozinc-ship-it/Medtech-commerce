@@ -119,7 +119,7 @@ export const PurchaseOrders: CollectionConfig = {
   hooks: {
     afterChange: [
       async ({ doc, previousDoc, req }) => {
-        const payload = req.payload as any;
+        const payload = req.payload;
         const relationId = (value: unknown) =>
           typeof value === "object" && value !== null ? String((value as { id?: string | number }).id ?? "") : String(value ?? "");
         const currentOfferId = relationId(doc.supplierOffer);
@@ -212,7 +212,7 @@ export const PurchaseOrders: CollectionConfig = {
           ? (sourcingRequestValue as { id?: string | number }).id
           : sourcingRequestValue;
         if (sourcingRequestId) {
-          const payload = req.payload as any;
+          const payload = req.payload;
           const sourcingRequest = await payload.findByID({
             collection: "sourcing-requests",
             id: sourcingRequestId,
@@ -228,7 +228,7 @@ export const PurchaseOrders: CollectionConfig = {
         const offerId = typeof offerValue === "object" && offerValue !== null ? (offerValue as { id?: string | number }).id : offerValue;
         const shouldValidateOffer = Boolean(offerId) && (operation === "create" || data.supplierOffer !== undefined || (data.status === "approved" && originalDoc?.status !== "approved"));
         if (shouldValidateOffer) {
-          const payload = req.payload as any;
+          const payload = req.payload;
           const offer = await payload.findByID({
             collection: "supplier-offers",
             id: offerId,
@@ -269,7 +269,7 @@ export const PurchaseOrders: CollectionConfig = {
           const lineOfferValue = line.supplierOffer;
           const lineOfferId = typeof lineOfferValue === "object" && lineOfferValue ? (lineOfferValue as { id?: string | number }).id : lineOfferValue;
           if (!lineOfferId) continue;
-          const lineOffer = await (req.payload as any).findByID({ collection: "supplier-offers", id: lineOfferId, depth: 0, overrideAccess: true });
+          const lineOffer = await (req.payload).findByID({ collection: "supplier-offers", id: lineOfferId, depth: 0, overrideAccess: true });
           if (!lineOffer || lineOffer.quoteStatus !== "approved") throw new Error("Chaque offre associée à une ligne d'achat doit être validée.");
           const supplierValue = data.supplier ?? originalDoc?.supplier;
           const supplierId = typeof supplierValue === "object" && supplierValue ? (supplierValue as { id?: string | number }).id : supplierValue;
@@ -301,7 +301,7 @@ export const PurchaseOrders: CollectionConfig = {
           const supplierValue = data.supplier ?? originalDoc?.supplier;
           const supplierId = typeof supplierValue === "object" && supplierValue ? supplierValue.id : supplierValue;
           if (!supplierId) throw new Error("Un fournisseur doit être sélectionné avant validation du bon.");
-          const payload = req.payload as any;
+          const payload = req.payload;
           const supplier = await payload.findByID({ collection: "suppliers", id: supplierId, depth: 0, overrideAccess: true });
           if (!supplier || supplier.verificationStatus !== "verified") {
             throw new Error("Le fournisseur doit être vérifié avant la validation du bon de commande.");
