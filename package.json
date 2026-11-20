@@ -20,7 +20,9 @@
     "knip": "knip"
   },
   "overrides": {
-    "react-is": "^19.2.4"
+    "react-is": "^19.2.4",
+    "fast-xml-parser": "^5.5.6",
+    "mongoose": "^8.24.7"
   },
   "dependencies": {
     "@eslint/compat": "^2.0.0",
