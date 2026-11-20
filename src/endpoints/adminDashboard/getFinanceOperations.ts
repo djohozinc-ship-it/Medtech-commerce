@@ -113,6 +113,7 @@ export const getFinanceOperations = async (req: PayloadRequest) => {
     let confirmedRefundsXOF = 0;
     let foreignCurrencyReceipts = 0;
     const receiptsByOrder = new Map<string, number>();
+    const refundsByOrder = new Map<string, number>();
     for (const raw of transactionsResult.docs) {
       const transaction = raw as unknown as RecordValue;
       if (transaction.transactionType !== "customer_payment" && transaction.transactionType !== "customer_refund") continue;
@@ -127,6 +128,7 @@ export const getFinanceOperations = async (req: PayloadRequest) => {
         if (orderId) receiptsByOrder.set(orderId, (receiptsByOrder.get(orderId) ?? 0) + amount);
       } else {
         confirmedRefundsXOF += amount;
+        if (orderId) refundsByOrder.set(orderId, (refundsByOrder.get(orderId) ?? 0) + amount);
       }
     }
 
@@ -147,7 +149,7 @@ export const getFinanceOperations = async (req: PayloadRequest) => {
         ordersWithMissingCostAllocation += 1;
         continue;
       }
-      orderContributionXOF += receipts - cost;
+      orderContributionXOF += receipts - (refundsByOrder.get(orderId) ?? 0) - cost;
     }
 
     const netReceiptsXOF = confirmedReceiptsXOF - confirmedRefundsXOF;
