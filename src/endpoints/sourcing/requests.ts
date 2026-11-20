@@ -2,6 +2,11 @@ import type { PayloadRequest } from "payload";
 
 type JsonRecord = Record<string, unknown>;
 
+const readRequestJson = async (req: PayloadRequest): Promise<unknown> => {
+  if (typeof req.json !== "function") throw new Error("Request body is unavailable");
+  return req.json();
+};
+
 const record = (value: unknown): JsonRecord =>
   value && typeof value === "object" ? (value as JsonRecord) : {};
 
@@ -80,7 +85,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
 
   let body: unknown;
   try {
-    body = await req.json();
+    body = await readRequestJson(req);
   } catch {
     return Response.json({ message: "Corps de requête invalide" }, { status: 400 });
   }
@@ -137,7 +142,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
 
     const expiryDate = sourcingRequest.quoteValidUntil ? new Date(sourcingRequest.quoteValidUntil) : undefined;
     if (expiryDate) expiryDate.setUTCHours(23, 59, 59, 999);
-    const expiry = expiryDate?.getTime();
+    const expiry = expiryDate?.getTime() ?? Number.NaN;
     if (expiryDate && (!Number.isFinite(expiry) || expiry < Date.now())) {
       await payload.update({
         collection: "sourcing-requests",
