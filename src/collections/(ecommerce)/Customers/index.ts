@@ -53,8 +53,10 @@ export const Customers: CollectionConfig = {
       },
     ],
     beforeChange: [
-      async ({ data }) => {
-        return { ...data, fullName: `${data.firstName} ${data.lastName}` };
+      async ({ data, originalDoc }) => {
+        const firstName = data?.firstName ?? originalDoc?.firstName ?? "";
+        const lastName = data?.lastName ?? originalDoc?.lastName ?? "";
+        return { ...data, fullName: `${firstName} ${lastName}`.trim() };
       },
     ],
   },
