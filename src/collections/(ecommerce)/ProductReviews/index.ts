@@ -1,8 +1,33 @@
-import { type CollectionConfig } from "payload";
+import { type Access, type CollectionConfig } from "payload";
+
+const customersOnly: Access = ({ req }) => req.user?.collection === "customers";
+const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
+const reviewOwnerOrAdministrator: Access = ({ req }) => {
+  if (req.user?.collection === "administrators") return true;
+  if (req.user?.collection === "customers") {
+    return { author: { equals: req.user.id } };
+  }
+  return false;
+};
 
 export const ProductReviews: CollectionConfig = {
   slug: "productReviews",
-  access: {},
+  access: {
+    read: () => true,
+    create: customersOnly,
+    update: reviewOwnerOrAdministrator,
+    delete: reviewOwnerOrAdministrator,
+  },
+  hooks: {
+    beforeChange: [
+      ({ data, operation, req }) => {
+        if (operation === "create" && req.user?.collection === "customers") {
+          return { ...data, author: req.user.id };
+        }
+        return data;
+      },
+    ],
+  },
   admin: {
     group: {
       en: "Products",
@@ -28,13 +53,12 @@ export const ProductReviews: CollectionConfig = {
     },
     {
       name: "author",
-      label: {
-        pl: "Autor opinii",
-        en: "Review author",
-      },
       type: "relationship",
       relationTo: "customers",
       required: true,
+      access: {
+        update: administratorsOnly,
+      },
     },
     {
       name: "rating",
@@ -50,7 +74,7 @@ export const ProductReviews: CollectionConfig = {
     {
       name: "review",
       label: {
-        pl: "Treść opinii",
+        pl: "Treść de l'avis",
         en: "Review content",
       },
       type: "richText",
