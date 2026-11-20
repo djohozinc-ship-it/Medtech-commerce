@@ -162,11 +162,38 @@ export const PurchaseOrders: CollectionConfig = {
       },
     ],
     beforeValidate: [
-      ({ data, originalDoc, operation, req }) => {
+      async ({ data, originalDoc, operation, req }) => {
         if (!data) return data;
         if (operation === "create" && !data.purchaseOrderReference) {
           const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
           data.purchaseOrderReference = `PO-${stamp}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+        }
+
+        const offerValue = data.supplierOffer ?? originalDoc?.supplierOffer;
+        const offerId = typeof offerValue === "object" && offerValue !== null ? (offerValue as { id?: string | number }).id : offerValue;
+        if (offerId) {
+          const payload = req.payload as any;
+          const offer = await payload.findByID({
+            collection: "supplier-offers",
+            id: offerId,
+            depth: 0,
+            overrideAccess: true,
+          });
+          if (offer.quoteStatus !== "approved") {
+            throw new Error("Le bon de commande ne peut utiliser qu'une offre fournisseur validée.");
+          }
+          if (offer.validUntil && new Date(offer.validUntil).getTime() < Date.now()) {
+            throw new Error("L'offre fournisseur sélectionnée a expiré.");
+          }
+          const supplierValue = data.supplier ?? originalDoc?.supplier;
+          const supplierId = typeof supplierValue === "object" && supplierValue !== null ? (supplierValue as { id?: string | number }).id : supplierValue;
+          const offerSupplierId = typeof offer.supplier === "object" && offer.supplier !== null ? offer.supplier.id : offer.supplier;
+          if (String(supplierId) !== String(offerSupplierId)) {
+            throw new Error("Le fournisseur du bon de commande doit correspondre au fournisseur de l'offre retenue.");
+          }
+          if ((data.currency ?? originalDoc?.currency) !== offer.currency) {
+            throw new Error("La devise du bon de commande doit correspondre à celle de l'offre fournisseur.");
+          }
         }
 
         const existingItems = Array.isArray(originalDoc?.items) ? originalDoc.items : [];
@@ -186,6 +213,8 @@ export const PurchaseOrders: CollectionConfig = {
         if (domestic < 0 || other < 0) throw new Error("Les frais fournisseur ne peuvent pas être négatifs.");
         data.goodsSubtotal = Math.round(subtotal * 100) / 100;
         data.totalAmount = Math.round((subtotal + domestic + other) * 100) / 100;
+        const paid = numeric(data.amountPaid) ?? numeric(originalDoc?.amountPaid) ?? 0;
+        data.balanceDue = Math.max(0, Math.round((Number(data.totalAmount) - paid) * 100) / 100);
 
         const status = data.status ?? originalDoc?.status;
         const previousStatus = originalDoc?.status ?? "draft";
