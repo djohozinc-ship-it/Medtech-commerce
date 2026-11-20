@@ -35,6 +35,7 @@ import { WarehouseInspections } from "./collections/WarehouseInspections";
 import { CashTransactions } from "./collections/CashTransactions";
 import { OrderCostAllocations } from "./collections/OrderCostAllocations";
 import { OrderPaymentAllocations } from "./collections/OrderPaymentAllocations";
+import { PaymentAttempts } from "./collections/PaymentAttempts";
 import { InPostCourier } from "./globals/(ecommerce)/Couriers/InPostCourier/config";
 import { InPostCourierCOD } from "./globals/(ecommerce)/Couriers/InPostCourierCOD/config";
 import { InPostPickup } from "./globals/(ecommerce)/Couriers/InPostPickup/config";
@@ -149,6 +150,7 @@ export default buildConfig({
     CashTransactions,
     OrderCostAllocations,
     OrderPaymentAllocations,
+    PaymentAttempts,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [
