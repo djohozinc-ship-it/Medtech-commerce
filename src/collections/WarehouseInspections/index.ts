@@ -19,7 +19,8 @@ export const WarehouseInspections: CollectionConfig = {
   },
   fields: [
     { name: "inspectionReference", type: "text", required: true, unique: true, label: "Référence du contrôle" },
-    { name: "shipment", type: "relationship", relationTo: "inbound-shipments", required: true, label: "Expédition" },
+    { name: "shipment", type: "relationship", relationTo: "inbound-shipments", label: "Expédition" },
+    { name: "goodsReceipt", type: "relationship", relationTo: "goods-receipts", label: "Réception fournisseur concernée" },
     { name: "warehouse", type: "relationship", relationTo: "warehouses", required: true, label: "Entrepôt de contrôle" },
     { name: "inspectionDate", type: "date", required: true, defaultValue: () => new Date().toISOString(), label: "Date du contrôle" },
     { name: "inspectorName", type: "text", label: "Nom du contrôleur" },
