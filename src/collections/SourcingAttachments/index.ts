@@ -37,9 +37,6 @@ export const SourcingAttachments: CollectionConfig = {
       "image/webp",
       "application/pdf",
     ],
-    limits: {
-      fileSize: 10 * 1024 * 1024,
-    },
   },
   fields: [
     {
