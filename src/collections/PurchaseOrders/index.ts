@@ -139,7 +139,14 @@ export const PurchaseOrders: CollectionConfig = {
           overrideAccess: true,
         });
         if (!supplier?.email) {
-          req.payload.logger.warn({ msg: "Purchase order marked sent but supplier has no email address", purchaseOrder: doc.purchaseOrderReference });
+          const message = "Aucune adresse e-mail n'est enregistrée pour ce fournisseur.";
+          req.payload.logger.warn({ msg: message, purchaseOrder: doc.purchaseOrderReference });
+          await payload.update({
+            collection: "purchase-orders",
+            id: doc.id,
+            overrideAccess: true,
+            data: { supplierEmailError: message },
+          });
           return doc;
         }
         const escapeHtml = (value: unknown) =>
@@ -197,6 +204,23 @@ export const PurchaseOrders: CollectionConfig = {
         if (operation === "create" && !data.purchaseOrderReference) {
           const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
           data.purchaseOrderReference = `PO-${stamp}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+        }
+
+        const sourcingRequestValue = data.sourcingRequest ?? originalDoc?.sourcingRequest;
+        const sourcingRequestId = typeof sourcingRequestValue === "object" && sourcingRequestValue !== null
+          ? (sourcingRequestValue as { id?: string | number }).id
+          : sourcingRequestValue;
+        if (sourcingRequestId) {
+          const payload = req.payload as any;
+          const sourcingRequest = await payload.findByID({
+            collection: "sourcing-requests",
+            id: sourcingRequestId,
+            depth: 0,
+            overrideAccess: true,
+          });
+          if (sourcingRequest.status !== "converted_to_order") {
+            throw new Error("Une demande client ne peut être approvisionnée qu'après acceptation du devis et création de sa commande client.");
+          }
         }
 
         const offerValue = data.supplierOffer ?? originalDoc?.supplierOffer;
