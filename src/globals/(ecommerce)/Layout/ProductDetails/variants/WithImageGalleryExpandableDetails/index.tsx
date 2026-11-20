@@ -199,21 +199,23 @@ export const WithImageGalleryExpandableDetails = ({
           <div className="mt-10 px-4 sm:mt-16 sm:px-0 lg:mt-0">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">{product.title}</h1>
 
-            <div className="mt-3">
-              <h2 className="sr-only">{t("product-info")}</h2>
-              <p className="text-3xl tracking-tight text-gray-900">
-                <PriceClient
-                  pricing={
-                    (product.enableVariants &&
-                    product.enableVariantPrices &&
-                    product.variants &&
-                    selectedVariant
-                      ? selectedVariant.pricing
-                      : product.pricing) ?? []
-                  }
-                />
-              </p>
-            </div>
+            {medtechProduct.salesMode !== "quote" && (
+              <div className="mt-3">
+                <h2 className="sr-only">{t("product-info")}</h2>
+                <p className="text-3xl tracking-tight text-gray-900">
+                  <PriceClient
+                    pricing={
+                      (product.enableVariants &&
+                      product.enableVariantPrices &&
+                      product.variants &&
+                      selectedVariant
+                        ? selectedVariant.pricing
+                        : product.pricing) ?? []
+                    }
+                  />
+                </p>
+              </div>
+            )}
 
             {productSettings.reviewsEnabled && (
               <>
