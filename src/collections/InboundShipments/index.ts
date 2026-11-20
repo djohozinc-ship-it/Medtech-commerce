@@ -125,7 +125,6 @@ export const InboundShipments: CollectionConfig = {
           received_china: "arrived_china_warehouse",
           consolidation: "consolidated",
           shipped: "departed_china",
-          in_transit: "departed_china",
           arrived_benin: "arrived_benin",
           customs: "customs_clearance",
         };
