@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 
 const MAX_FILES = 4;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -9,6 +10,9 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pd
 type FormState = "idle" | "uploading" | "sending" | "success" | "error";
 
 export function SourcingRequestForm() {
+  const searchParams = useSearchParams();
+  const requestedProduct = searchParams.get("product") ?? "";
+  const requestedQuantity = searchParams.get("quantity") ?? "1";
   const [state, setState] = useState<FormState>("idle");
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -101,7 +105,7 @@ export function SourcingRequestForm() {
       <section className="space-y-4 rounded-2xl border border-gray-200 p-5">
         <h2 className="text-xl font-semibold">Le produit recherché</h2>
         <label className="block text-sm font-medium">Nom du produit *
-          <input name="productName" required maxLength={180} className="mt-1 w-full rounded-lg border p-3" placeholder="Ex. : moniteur multiparamétrique" />
+          <input name="productName" required defaultValue={requestedProduct} maxLength={180} className="mt-1 w-full rounded-lg border p-3" placeholder="Ex. : moniteur multiparamétrique" />
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium">Marque souhaitée
@@ -139,7 +143,7 @@ export function SourcingRequestForm() {
         <h2 className="text-xl font-semibold">Quantité et destination</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium">Quantité souhaitée *
-            <input name="quantity" type="number" min="1" step="1" defaultValue="1" required className="mt-1 w-full rounded-lg border p-3" />
+            <input name="quantity" type="number" min="1" step="1" defaultValue={requestedQuantity} required className="mt-1 w-full rounded-lg border p-3" />
           </label>
           <label className="block text-sm font-medium">Ville de livraison au Bénin *
             <input name="destinationCity" required defaultValue="Cotonou" maxLength={120} className="mt-1 w-full rounded-lg border p-3" />
