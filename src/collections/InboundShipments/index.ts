@@ -42,6 +42,14 @@ export const InboundShipments: CollectionConfig = {
     { name: "volumeM3", type: "number", min: 0, label: "Volume total (m³)" },
     { name: "packageCount", type: "number", min: 0, label: "Nombre de colis" },
     { name: "freightCost", type: "number", min: 0, label: "Coût du fret" },
+    { name: "insuranceCost", type: "number", min: 0, label: "Coût de l’assurance" },
+    { name: "customsAndTaxesCost", type: "number", min: 0, label: "Douane et taxes réelles" },
+    { name: "handlingCost", type: "number", min: 0, label: "Manutention et stockage" },
+    { name: "freightInvoice", type: "relationship", relationTo: "media", label: "Facture du transporteur" },
+    { name: "packingList", type: "relationship", relationTo: "media", label: "Packing list / liste de colisage" },
+    { name: "commercialInvoice", type: "relationship", relationTo: "media", label: "Facture commerciale" },
+    { name: "insuranceCertificate", type: "relationship", relationTo: "media", label: "Attestation d’assurance" },
+    { name: "customsDeclaration", type: "relationship", relationTo: "media", label: "Déclaration douanière" },
     { name: "freightCurrency", type: "select", options: [
       { label: "XOF", value: "XOF" }, { label: "CNY", value: "CNY" },
       { label: "USD", value: "USD" }, { label: "EUR", value: "EUR" },
@@ -65,5 +73,90 @@ export const InboundShipments: CollectionConfig = {
     { name: "exceptionNotes", type: "textarea", label: "Incident / retard / dommage" },
     { name: "internalNotes", type: "textarea", label: "Notes internes" },
   ],
+  hooks: {
+    beforeValidate: [
+      async ({ data, originalDoc, operation, req }) => {
+        if (!data) return data;
+        if (operation === "create" && !data.shipmentReference) {
+          const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+          data.shipmentReference = `SHP-${stamp}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+        }
+        for (const field of ["grossWeightKg", "volumeM3", "packageCount", "freightCost", "insuranceCost", "customsAndTaxesCost", "handlingCost"] as const) {
+          const value = data[field] ?? originalDoc?.[field];
+          if (value !== undefined && value !== null && (!Number.isFinite(Number(value)) || Number(value) < 0)) {
+            throw new Error("Les poids, volumes, quantités et coûts d'expédition doivent être positifs ou nuls.");
+          }
+        }
+        const status = data.status ?? originalDoc?.status;
+        if (["shipped", "in_transit"].includes(String(status)) && !(data.departureDate ?? originalDoc?.departureDate)) {
+          throw new Error("Renseignez la date réelle de départ avant de marquer l'expédition comme expédiée.");
+        }
+        if (["arrived_benin", "customs", "received_benin", "closed"].includes(String(status)) && !(data.actualArrival ?? originalDoc?.actualArrival)) {
+          throw new Error("Renseignez la date réelle d'arrivée au Bénin.");
+        }
+        if (status === "closed" && !(data.customsReference ?? originalDoc?.customsReference)) {
+          throw new Error("Le dossier douanier doit être renseigné avant la clôture.");
+        }
+        if (status === "exception" && !(data.exceptionNotes ?? originalDoc?.exceptionNotes)) {
+          throw new Error("Décrivez l'incident avant de placer l'expédition en anomalie.");
+        }
+        const originValue = data.originWarehouse ?? originalDoc?.originWarehouse;
+        const destinationValue = data.destinationWarehouse ?? originalDoc?.destinationWarehouse;
+        const originId = typeof originValue === "object" && originValue ? originValue.id : originValue;
+        const destinationId = typeof destinationValue === "object" && destinationValue ? destinationValue.id : destinationValue;
+        if (originId && destinationId) {
+          const payload = req.payload as any;
+          const [origin, destination] = await Promise.all([
+            payload.findByID({ collection: "warehouses", id: originId, depth: 0, overrideAccess: true }),
+            payload.findByID({ collection: "warehouses", id: destinationId, depth: 0, overrideAccess: true }),
+          ]);
+          if (String(originId) === String(destinationId)) throw new Error("L'entrepôt de départ et celui d'arrivée doivent être différents.");
+          if (origin?.warehouseType === "benin_destination" && destination?.warehouseType === "china_origin") {
+            throw new Error("Le sens du trajet est inversé : l'expédition internationale doit partir de Chine vers le Bénin.");
+          }
+        }
+        return data;
+      },
+    ],
+    afterChange: [
+      async ({ doc, previousDoc, req }) => {
+        if (doc.status === previousDoc?.status) return doc;
+        const eventStatus: Record<string, string> = {
+          received_china: "arrived_china_warehouse",
+          consolidation: "consolidated",
+          shipped: "departed_china",
+          in_transit: "departed_china",
+          arrived_benin: "arrived_benin",
+          customs: "customs_clearance",
+        };
+        const mapped = eventStatus[String(doc.status)];
+        if (!mapped) return doc;
+        const payload = req.payload as any;
+        const orders = Array.isArray(doc.orders) ? doc.orders : [];
+        for (const orderValue of orders) {
+          const orderId = typeof orderValue === "object" && orderValue ? orderValue.id : orderValue;
+          if (!orderId) continue;
+          await payload.create({
+            collection: "shipment-events",
+            overrideAccess: true,
+            data: {
+              reference: doc.shipmentReference,
+              inboundShipment: doc.id,
+              order: orderId,
+              status: mapped,
+              eventDate: new Date().toISOString(),
+              location: doc.status === "arrived_benin" || doc.status === "customs" ? "Bénin" : "Chine",
+              carrier: doc.freightForwarder,
+              trackingCode: doc.trackingNumber,
+              trackingUrl: doc.trackingUrl,
+              note: doc.exceptionNotes || "",
+              visibleToCustomer: true,
+            },
+          });
+        }
+        return doc;
+      },
+    ],
+  },
   timestamps: true,
 };
