@@ -59,7 +59,7 @@ export const OrderPaymentAllocations: CollectionConfig = {
   ],
   hooks: {
     beforeValidate: [
-      ({ data, operation }) => {
+      async ({ data, operation, originalDoc, req }) => {
         if (!data) return data;
         if (operation === "create" && !data.allocationReference) {
           const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
