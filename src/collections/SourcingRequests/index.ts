@@ -352,7 +352,8 @@ export const SourcingRequests: CollectionConfig = {
             if (!validUntil) {
               throw new Error("Renseignez une date limite de validité avant d’envoyer le devis.");
             }
-            if (new Date(validUntil).getTime() < Date.now()) {
+            const validUntilTime = new Date(validUntil).getTime();
+            if (!Number.isFinite(validUntilTime) || validUntilTime < Date.now()) {
               throw new Error("La date de validité du devis doit être future.");
             }
           }
