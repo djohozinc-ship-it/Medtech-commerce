@@ -308,8 +308,8 @@ export const PurchaseOrders: CollectionConfig = {
             approved: ["draft", "sent_to_supplier", "cancelled"],
             sent_to_supplier: ["acknowledged", "cancelled"],
             acknowledged: ["partially_received", "received", "cancelled"],
-            partially_received: ["received", "cancelled"],
-            received: [],
+            partially_received: ["received", "acknowledged", "cancelled"],
+            received: ["partially_received", "acknowledged"],
             cancelled: [],
           };
           if (!(allowed[previousStatus] ?? []).includes(String(status))) {
