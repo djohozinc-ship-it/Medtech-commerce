@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { PriceClient } from "@/components/(ecommerce)/PriceClient";
 import { Media } from "@/components/Media";
 import RichText from "@/components/RichText";
-import { type Product, type ShopLayout } from "@/payload-types";
+import { type Media as MediaDocument, type Product, type ShopLayout } from "@/payload-types";
 import { type Currency } from "@/stores/Currency/types";
 import { cn } from "@/utilities/cn";
 
@@ -14,14 +14,6 @@ import { ProductForm } from "./components/ProductForm";
 import { ProductGallery } from "./components/ProductGallery";
 
 import { type FilledVariant } from "../../types";
-
-type TechnicalDocument = {
-  id?: string;
-  alt?: string | null;
-  filename?: string | null;
-  url?: string | null;
-  mimeType?: string | null;
-};
 
 type MedtechProduct = Product & {
   commercialType?: string | null;
@@ -43,7 +35,7 @@ const hasValue = (value: string | number | null | undefined): value is string | 
 
 const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
   const t = useTranslations("ProductDetails");
-  const rows: [string, string | number | null | undefined][] = [
+  const rows = ([
     [t("manufacturer"), product.manufacturer],
     [t("brand"), product.brand],
     [t("model-reference"), product.modelReference],
@@ -51,10 +43,13 @@ const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
     [t("warranty"), hasValue(product.warrantyMonths) ? `${product.warrantyMonths} ${t("month-unit")}` : null],
     [t("lead-time"), hasValue(product.leadTimeDays) ? `${product.leadTimeDays} ${t("day-unit")}` : null],
     [t("availability"), product.availabilityMode === "in_stock" ? t("in-stock-confirm") : product.availabilityMode === "on_order" ? t("on-order") : product.availabilityMode === "to_confirm" ? t("to-confirm") : null],
-  ].filter((row): row is [string, string | number] => hasValue(row[1]));
+  ] as [string, string | number | null | undefined][]).reduce<[string, string | number][]>((result, [label, value]) => {
+    if (hasValue(value)) result.push([label, value]);
+    return result;
+  }, []);
 
   const documents = (product.regulatoryDocuments ?? []).filter(
-    (document): document is TechnicalDocument =>
+    (document): document is MediaDocument =>
       typeof document !== "string" && Boolean(document.url),
   );
 
