@@ -24,6 +24,8 @@ export const InboundShipments: CollectionConfig = {
     { name: "orders", type: "relationship", relationTo: "orders", hasMany: true, label: "Commandes concernées" },
     { name: "supplierOffers", type: "relationship", relationTo: "supplier-offers", hasMany: true, label: "Offres / achats concernés" },
     { name: "purchaseOrders", type: "relationship", relationTo: "purchase-orders", hasMany: true, label: "Bons de commande transportés" },
+    { name: "goodsReceipts", type: "join", collection: "goods-receipts", on: "inboundShipment", label: "Réceptions liées" },
+    { name: "warehouseInspections", type: "join", collection: "warehouse-inspections", on: "shipment", label: "Contrôles qualité liés" },
     { name: "shippingMode", type: "select", required: true, options: [
       { label: "Aérien", value: "air" },
       { label: "Maritime", value: "sea" },
