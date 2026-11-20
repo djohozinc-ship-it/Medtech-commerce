@@ -1,13 +1,12 @@
 import { getPayload } from "payload";
 
 import { type Locale } from "@/i18n/config";
-import { type Order } from "@/payload-types";
+import { type Order, type Product } from "@/payload-types";
 import config from "@/payload.config";
 
 export const getOrderProducts = async (orderProducts: Order["products"] | null, locale: Locale) => {
   try {
     const payload = await getPayload({ config });
-    console.log(orderProducts);
     return (
       orderProducts &&
       (await Promise.all(
@@ -27,9 +26,9 @@ export const getOrderProducts = async (orderProducts: Order["products"] | null, 
               title: product.productName ?? "Produit sur devis",
               slug: "",
               images: [],
-              variants: [],
-              colors: [],
-              sizes: [],
+              variants: [] as Product["variants"],
+              colors: [] as Product["colors"],
+              sizes: [] as Product["sizes"],
               description: null,
             };
           }
