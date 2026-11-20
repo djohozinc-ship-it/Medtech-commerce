@@ -1,9 +1,18 @@
 import { type CollectionConfig } from "payload";
 
+import { anyone } from "@/access/anyone";
+import { authenticated } from "@/access/authenticated";
+
 import { slugField } from "@/fields/slug";
 
 export const ProductSubCategories: CollectionConfig = {
   slug: "productSubCategories",
+  access: {
+    create: authenticated,
+    read: anyone,
+    update: authenticated,
+    delete: authenticated,
+  },
   admin: {
     useAsTitle: "title",
     group: {
