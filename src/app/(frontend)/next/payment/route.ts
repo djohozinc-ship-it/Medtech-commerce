@@ -97,6 +97,7 @@ export async function POST(req: Request) {
 
     const order = await payload.create({
       collection: "orders",
+      overrideAccess: true,
       data: {
         customer: user?.id,
         extractedFromStock: true,
