@@ -70,7 +70,7 @@ export const getFinanceOperations = async (req: PayloadRequest) => {
       const transactionId = relationId(allocation.cashTransaction);
       if (!orderId || !transactionId) continue;
       const source = confirmedTransactions.get(transactionId);
-      if (!source || source.transactionType !== "customer_payment") continue;
+      if (source?.transactionType !== "customer_payment") continue;
       if (source.currency !== allocation.currency) continue;
       const convertedAmount = asAmount(allocation.amountInOrderCurrency);
       if (convertedAmount <= 0) continue;
