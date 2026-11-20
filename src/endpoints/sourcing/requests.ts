@@ -33,6 +33,7 @@ export const getMySourcingRequests = async (req: PayloadRequest) => {
       limit: 100,
       where: { customerEmail: { equals: req.user.email } },
       select: {
+        id: true,
         requestReference: true,
         customerName: true,
         customerEmail: true,
