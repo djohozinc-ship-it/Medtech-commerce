@@ -42,6 +42,12 @@ export async function POST(req: Request) {
       checkoutData: CheckoutFormData;
       currency: Currency;
     };
+    if (!checkoutData?.shipping || selectedCountry !== checkoutData.shipping.country) {
+      return Response.json({ status: 400, message: "Le pays de livraison sélectionné ne correspond pas aux coordonnées de livraison." });
+    }
+    if (!["fr", "en", "pl"].includes(locale)) {
+      return Response.json({ status: 400, message: "Langue de commande invalide." });
+    }
     if (!Array.isArray(cart) || cart.length === 0 || cart.length > 50) {
       return Response.json({ status: 400, message: "Panier invalide ou trop volumineux." });
     }
@@ -123,7 +129,7 @@ export async function POST(req: Request) {
       ?.range?.find((range) => range.weightFrom <= totalWeight && range.weightTo >= totalWeight)
       ?.pricing.find((pricing) => pricing.currency === currency)?.value;
 
-    if (!shippingCost) {
+    if (typeof shippingCost !== "number" || !Number.isFinite(shippingCost) || shippingCost < 0) {
       return Response.json({ status: 400, message: "Shipping cost not found" });
     }
 
