@@ -4,7 +4,6 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 
 type ShipmentEvent = {
-  id: string | number;
   status: string;
   eventDate: string;
   location?: string | null;
@@ -74,7 +73,7 @@ export const CustomerShipmentTracking = ({ orderId }: { orderId: string }) => {
       {events.length > 0 && (
         <ol className="mt-5 space-y-5">
           {events.map((event) => (
-            <li key={event.id} className="relative border-l-2 border-gray-200 pl-5">
+            <li key={`${event.eventDate}-${event.status}`} className="relative border-l-2 border-gray-200 pl-5">
               <span className="absolute -left-[5px] top-1 size-2 rounded-full bg-indigo-600" />
               <p className="font-medium text-gray-900">{labels[event.status] ?? event.status}</p>
               <p className="mt-1 text-xs text-gray-500">{dateLabel(event.eventDate)}</p>
