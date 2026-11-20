@@ -206,7 +206,7 @@ export async function POST(req: Request) {
           name: checkoutData.shipping.name,
           address: checkoutData.shipping.address,
           city: checkoutData.shipping.city,
-          country: checkoutData.shipping.country as Country,
+          country: checkoutData.shipping.country,
           region: checkoutData.shipping.region,
           postalCode: checkoutData.shipping.postalCode,
           email: checkoutData.shipping.email,
