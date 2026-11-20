@@ -293,3 +293,59 @@ export const fedapayWebhook = async (req: PayloadRequest) => {
     return Response.json({ message: "Webhook processing failed" }, { status: 502 });
   }
 };
+
+export const getCustomerOrderBalance = async (req: PayloadRequest) => {
+  if (req.method !== "GET") return Response.json({ message: "Method not allowed" }, { status: 405 });
+  if (req.user?.collection !== "customers") return Response.json({ message: "Connexion client requise" }, { status: 401 });
+  try {
+    const url = new URL(req.url ?? "https://localhost");
+    const orderId = url.searchParams.get("orderId");
+    if (!orderId) return Response.json({ message: "Commande manquante" }, { status: 400 });
+    const order = await req.payload.findByID({
+      collection: "orders",
+      id: orderId,
+      depth: 0,
+      overrideAccess: true,
+    }) as unknown as AnyRecord;
+    if (idOf(order.customer) !== String(req.user.id)) {
+      return Response.json({ message: "Commande introuvable" }, { status: 404 });
+    }
+    const details = record(order.orderDetails);
+    const currency = String(details.currency ?? "");
+    const total = Number(details.totalWithShipping);
+    if (!Number.isFinite(total) || total < 0) {
+      return Response.json({ message: "Montant de commande invalide" }, { status: 400 });
+    }
+    const allocations = await req.payload.find({
+      collection: "order-payment-allocations",
+      depth: 1,
+      limit: 1000,
+      pagination: false,
+      overrideAccess: true,
+      where: { and: [
+        { order: { equals: orderId } },
+        { status: { equals: "confirmed" } },
+      ] },
+    });
+    let paidFromLedger = 0;
+    for (const raw of allocations.docs) {
+      const allocation = raw as unknown as AnyRecord;
+      const cash = record(allocation.cashTransaction);
+      if (cash.status !== "confirmed" || cash.transactionType !== "customer_payment") continue;
+      if (allocation.currency !== currency) continue;
+      paidFromLedger += Number(allocation.amountInOrderCurrency) || 0;
+    }
+    const paid = allocations.docs.length > 0 ? paidFromLedger : Number(details.amountPaid) || 0;
+    return Response.json({
+      orderId,
+      currency,
+      total: Math.round(total),
+      paid: Math.round(paid),
+      due: Math.max(0, Math.round(total - paid)),
+      paymentEnabled: currency === "XOF" && Math.round(total - paid) > 0,
+    });
+  } catch (error) {
+    req.payload.logger.error({ err: error, msg: "Unable to calculate customer order balance" });
+    return Response.json({ message: "Impossible de calculer le solde de la commande" }, { status: 500 });
+  }
+};
