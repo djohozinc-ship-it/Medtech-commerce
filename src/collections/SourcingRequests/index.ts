@@ -94,6 +94,27 @@ export const SourcingRequests: CollectionConfig = {
       },
     },
     {
+      name: "attachments",
+      type: "array",
+      label: "Photos et fiches techniques",
+      admin: {
+        description: "Fichiers transmis par le client. Formats acceptés : JPG, PNG, WEBP et PDF.",
+      },
+      fields: [
+        {
+          name: "file",
+          type: "upload",
+          relationTo: "sourcing-attachments",
+          required: true,
+        },
+        {
+          name: "description",
+          type: "text",
+          label: "Description du fichier",
+        },
+      ],
+    },
+    {
       type: "row",
       fields: [
         {
