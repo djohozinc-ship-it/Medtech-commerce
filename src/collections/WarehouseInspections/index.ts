@@ -46,16 +46,18 @@ export const WarehouseInspections: CollectionConfig = {
     beforeValidate: [
       ({ data }) => {
         if (!data) return data;
-        const expected = Number(data.quantityExpected ?? 0);
-        const received = Number(data.quantityReceived ?? 0);
+        const expected = data.quantityExpected == null ? undefined : Number(data.quantityExpected);
+        const received = data.quantityReceived == null ? undefined : Number(data.quantityReceived);
         const damaged = Number(data.damagedQuantity ?? 0);
         const missing = Number(data.missingQuantity ?? 0);
-        const packagesExpected = Number(data.packagesExpected ?? 0);
-        const packagesReceived = Number(data.packagesReceived ?? 0);
-        if (![expected, received, damaged, missing, packagesExpected, packagesReceived].every(Number.isFinite) ||
-            [expected, received, damaged, missing, packagesExpected, packagesReceived].some((value) => value < 0) ||
-            damaged > received || missing > expected || received + missing > expected ||
-            packagesReceived > packagesExpected) {
+        const packagesExpected = data.packagesExpected == null ? undefined : Number(data.packagesExpected);
+        const packagesReceived = data.packagesReceived == null ? undefined : Number(data.packagesReceived);
+        const values = [expected, received, damaged, missing, packagesExpected, packagesReceived].filter((value): value is number => value !== undefined);
+        if (!values.every(Number.isFinite) || values.some((value) => value < 0) ||
+            (received !== undefined && damaged > received) ||
+            (expected !== undefined && missing > expected) ||
+            (expected !== undefined && received !== undefined && received + missing > expected) ||
+            (packagesExpected !== undefined && packagesReceived !== undefined && packagesReceived > packagesExpected)) {
           throw new Error("Les quantités de colis et de produits inspectés sont incohérentes.");
         }
         return data;
