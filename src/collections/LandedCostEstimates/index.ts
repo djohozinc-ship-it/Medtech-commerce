@@ -30,7 +30,6 @@ export const LandedCostEstimates: CollectionConfig = {
     { name: "exchangeRateSource", type: "text", label: "Source du taux de change (banque, transfert, justificatif)" },
     { name: "exchangeRateDate", type: "date", label: "Date du taux de change appliqué" },
     { name: "costEvidence", type: "relationship", relationTo: "media", hasMany: true, label: "Factures, quittances et justificatifs des coûts" },
-    { name: "purchaseOrder", type: "relationship", relationTo: "purchase-orders", label: "Bon de commande fournisseur" },
     { name: "productName", type: "text", required: true, label: "Produit" },
     { name: "quantity", type: "number", required: true, min: 1, label: "Quantité à acheter" },
     { name: "supplierCurrency", type: "select", required: true, options: [{ label: "CNY", value: "CNY" }, { label: "USD", value: "USD" }, { label: "EUR", value: "EUR" }], label: "Devise fournisseur" },
