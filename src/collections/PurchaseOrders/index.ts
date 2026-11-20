@@ -241,11 +241,12 @@ export const PurchaseOrders: CollectionConfig = {
           if (sourcingRequestId && String(offerRequestId ?? "") !== String(sourcingRequestId)) {
             throw new Error("L'offre fournisseur doit être rattachée à la même demande client que le bon de commande.");
           }
-          if (offer.quoteStatus !== "approved") {
+          if (!offer || offer.quoteStatus !== "approved") {
             throw new Error("Le bon de commande ne peut utiliser qu'une offre fournisseur validée.");
           }
-          if (offer.validUntil && new Date(offer.validUntil).getTime() < Date.now()) {
-            throw new Error("L'offre fournisseur sélectionnée a expiré.");
+          if (offer.validUntil) {
+            const offerExpiry = new Date(offer.validUntil).getTime();
+            if (!Number.isFinite(offerExpiry) || offerExpiry < Date.now()) throw new Error("L'offre fournisseur sélectionnée a expiré ou sa date de validité est incorrecte.");
           }
           const supplierValue = data.supplier ?? originalDoc?.supplier;
           const supplierId = typeof supplierValue === "object" && supplierValue !== null ? (supplierValue as { id?: string | number }).id : supplierValue;
