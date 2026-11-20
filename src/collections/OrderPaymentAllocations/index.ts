@@ -2,7 +2,7 @@ import { type Access, type CollectionConfig } from "payload";
 
 const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
 
-export const OrderPaymentAllocations: CollectionConfig = {
+export const OrderPaymentAllocations: CollectionConfig<"order-payment-allocations"> = {
   slug: "order-payment-allocations",
   labels: { singular: "Affectation de paiement", plural: "Rapprochements de paiements" },
   admin: {
