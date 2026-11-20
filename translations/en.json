@@ -250,7 +250,8 @@
       "orders": "Orders",
       "settings": "Settings",
       "orders-data": "Data for orders",
-      "help": "Help"
+      "help": "Help",
+      "sourcing": "Quote requests"
     },
     "orders": {
       "title": "Orders",
