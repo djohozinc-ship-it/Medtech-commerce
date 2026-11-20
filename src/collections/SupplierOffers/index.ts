@@ -77,13 +77,13 @@ export const SupplierOffers: CollectionConfig = {
         if (!data) return data;
         const supplierValue = data.supplier ?? originalDoc?.supplier;
         const supplierId = typeof supplierValue === "object" && supplierValue ? supplierValue.id : supplierValue;
-        const quantity = typeof data.requestedQuantity === "number" ? data.requestedQuantity : (typeof originalDoc?.requestedQuantity === "number" ? originalDoc.requestedQuantity : Number(data.minimumOrderQuantity ?? originalDoc?.minimumOrderQuantity ?? 1));
-        const shipping = typeof data.chinaDomesticShipping === "number" ? data.chinaDomesticShipping : Number(originalDoc?.chinaDomesticShipping ?? 0);
-        if (Number.isFinite(quantity) && quantity > 0 && Number.isFinite(price) && Number.isFinite(shipping) && shipping >= 0) {
-          data.comparisonTotal = Math.round((price * quantity + shipping) * 100) / 100;
-        }
         const status = data.quoteStatus ?? originalDoc?.quoteStatus;
         const price = typeof data.unitPrice === "number" ? data.unitPrice : originalDoc?.unitPrice;
+        const quantity = typeof data.requestedQuantity === "number" ? data.requestedQuantity : (typeof originalDoc?.requestedQuantity === "number" ? originalDoc.requestedQuantity : Number(data.minimumOrderQuantity ?? originalDoc?.minimumOrderQuantity ?? 1));
+        const shipping = typeof data.chinaDomesticShipping === "number" ? data.chinaDomesticShipping : Number(originalDoc?.chinaDomesticShipping ?? 0);
+        if (Number.isFinite(quantity) && quantity > 0 && typeof price === "number" && Number.isFinite(price) && Number.isFinite(shipping) && shipping >= 0) {
+          data.comparisonTotal = Math.round((price * quantity + shipping) * 100) / 100;
+        }
         const moq = typeof data.minimumOrderQuantity === "number" ? data.minimumOrderQuantity : originalDoc?.minimumOrderQuantity;
         const validity = data.validUntil ?? originalDoc?.validUntil;
         if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) throw new Error("Le prix unitaire fournisseur doit être supérieur à zéro.");
