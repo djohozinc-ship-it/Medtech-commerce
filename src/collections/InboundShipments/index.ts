@@ -107,6 +107,24 @@ export const InboundShipments: CollectionConfig = {
         if (status === "exception" && !(data.exceptionNotes ?? originalDoc?.exceptionNotes)) {
           throw new Error("Décrivez l'incident avant de placer l'expédition en anomalie.");
         }
+        if (status === "exception" && !(data.customerUpdate ?? originalDoc?.customerUpdate)) {
+          throw new Error("Ajoutez un message clair destiné au client pour signaler l'incident.");
+        }
+        const purchaseOrderValues = data.purchaseOrders ?? originalDoc?.purchaseOrders ?? [];
+        if (["ready_to_ship", "shipped", "in_transit", "arrived_benin", "customs", "received_benin", "closed"].includes(String(status))) {
+          if (!Array.isArray(purchaseOrderValues) || purchaseOrderValues.length === 0) {
+            throw new Error("Rattachez au moins un bon de commande fournisseur à l'expédition.");
+          }
+          const payload = req.payload as any;
+          for (const value of purchaseOrderValues) {
+            const id = typeof value === "object" && value ? value.id : value;
+            if (!id) continue;
+            const purchaseOrder = await payload.findByID({ collection: "purchase-orders", id, depth: 0, overrideAccess: true });
+            if (purchaseOrder?.status !== "received") {
+              throw new Error("Une expédition internationale ne peut être prête à partir que lorsque tous les bons fournisseurs sont entièrement réceptionnés et contrôlés.");
+            }
+          }
+        }
         const originValue = data.originWarehouse ?? originalDoc?.originWarehouse;
         const destinationValue = data.destinationWarehouse ?? originalDoc?.destinationWarehouse;
         const originId = typeof originValue === "object" && originValue ? originValue.id : originValue;
