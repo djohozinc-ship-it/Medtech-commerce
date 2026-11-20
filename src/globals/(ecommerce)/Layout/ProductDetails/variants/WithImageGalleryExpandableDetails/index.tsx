@@ -101,7 +101,7 @@ const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
                   rel="noreferrer"
                   className="text-sm font-medium text-main-700 underline underline-offset-2"
                 >
-                  {document.alt || document.filename || `${t("document-label")} ${index + 1}`}
+                  {document.alt ?? document.filename ?? `${t("document-label")} ${index + 1}`}
                 </a>
                 {document.mimeType === "application/pdf" && <span className="ml-2 text-xs text-gray-500">PDF</span>}
               </li>
