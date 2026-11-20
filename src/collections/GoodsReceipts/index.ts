@@ -74,7 +74,7 @@ export const GoodsReceipts: CollectionConfig = {
   hooks: {
     afterChange: [
       async ({ doc, req }) => {
-        const payload = req.payload as any;
+        const payload = req.payload;
         const purchaseOrderId = typeof doc.purchaseOrder === "object" ? doc.purchaseOrder?.id : doc.purchaseOrder;
         if (!purchaseOrderId) return doc;
 
@@ -136,7 +136,7 @@ export const GoodsReceipts: CollectionConfig = {
         const purchaseOrderValue = data.purchaseOrder ?? originalDoc?.purchaseOrder;
         const purchaseOrderId = typeof purchaseOrderValue === "object" && purchaseOrderValue ? purchaseOrderValue.id : purchaseOrderValue;
         if (!purchaseOrderId) throw new Error("Toute réception doit être rattachée à un bon de commande fournisseur.");
-        const payload = req.payload as any;
+        const payload = req.payload;
         const po = await payload.findByID({ collection: "purchase-orders", id: purchaseOrderId, depth: 0, overrideAccess: true });
         if (!po || !Array.isArray(po.items)) throw new Error("Bon de commande introuvable ou sans lignes.");
         const inboundShipmentValue = data.inboundShipment ?? originalDoc?.inboundShipment;
