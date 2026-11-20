@@ -227,12 +227,14 @@ export const InboundShipments: CollectionConfig = {
               collection: "shipment-events",
               id: existingEvent.id,
               overrideAccess: true,
+              draft: false,
               data: eventData,
             });
           } else {
             await payload.create({
               collection: "shipment-events",
               overrideAccess: true,
+              draft: false,
               data: eventData,
             });
           }
