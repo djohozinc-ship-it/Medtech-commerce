@@ -57,7 +57,7 @@ export const WarehouseInspections: CollectionConfig = {
         const packagesExpected = packagesExpectedValue == null ? undefined : Number(packagesExpectedValue);
         const packagesReceived = packagesReceivedValue == null ? undefined : Number(packagesReceivedValue);
         const values = [expected, received, damaged, missing, packagesExpected, packagesReceived].filter((value): value is number => value !== undefined);
-        if (!values.every(Number.isFinite) || values.some((value) => value < 0) ||
+        if (!values.every(Number.isFinite) || values.some((value) => !Number.isInteger(value) || value < 0) ||
             (received !== undefined && damaged > received) ||
             (expected !== undefined && missing > expected) ||
             (expected !== undefined && received !== undefined && received + missing > expected) ||
