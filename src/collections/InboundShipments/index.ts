@@ -2,7 +2,7 @@ import { type Access, type CollectionConfig } from "payload";
 
 const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
 
-export const InboundShipments: CollectionConfig = {
+export const InboundShipments: CollectionConfig<"inbound-shipments"> = {
   slug: "inbound-shipments",
   labels: { singular: "Expédition internationale", plural: "Expéditions internationales" },
   admin: {
