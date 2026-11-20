@@ -23,7 +23,7 @@ export const getCustomer = async () => {
         // console.log("User on login:", user);
         // console.log("Cookies on login:", cookieStore.toString());
 
-        if (!user || user.collection !== "customers") {
+        if (user?.collection !== "customers") {
           return null;
         }
 
