@@ -67,7 +67,6 @@ const OrdersPage = async ({ params }: { params: Promise<{ locale: Locale; id: st
               (variant) => variant.variantSlug === product.variantSlug,
             );
 
-            console.log(selectedVariant);
             const productImage =
               product.variants && product.variantSlug
                 ? ((product.variants.find((variant) => product.variantSlug === variant.variantSlug)?.image ??
