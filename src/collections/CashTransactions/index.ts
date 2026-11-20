@@ -113,13 +113,78 @@ export const CashTransactions: CollectionConfig = {
   ],
   hooks: {
     beforeValidate: [
-      ({ data, operation }) => {
+      async ({ data, originalDoc, operation, req }) => {
         if (!data) return data;
         if (operation === "create" && !data.transactionReference) {
           const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
           data.transactionReference = `FIN-${stamp}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
         }
+        const transactionType = data.transactionType ?? originalDoc?.transactionType;
+        const purchaseOrderValue = data.purchaseOrder ?? originalDoc?.purchaseOrder;
+        const purchaseOrderId = typeof purchaseOrderValue === "object" ? purchaseOrderValue?.id : purchaseOrderValue;
+        if (transactionType === "supplier_payment" && purchaseOrderId) {
+          const payload = req.payload as any;
+          const purchaseOrder = await payload.findByID({
+            collection: "purchase-orders",
+            id: purchaseOrderId,
+            depth: 0,
+            overrideAccess: true,
+          });
+          const paymentCurrency = data.currency ?? originalDoc?.currency;
+          const amount = Number(data.amount ?? originalDoc?.amount);
+          const suppliedRate = Number(data.purchaseOrderExchangeRate ?? originalDoc?.purchaseOrderExchangeRate);
+          const rate = paymentCurrency === purchaseOrder.currency ? 1 : suppliedRate;
+          if (!Number.isFinite(amount) || amount <= 0 || !Number.isFinite(rate) || rate <= 0) {
+            throw new Error("Pour un paiement fournisseur lié à un bon, indiquez un montant valide et un taux de change si les devises diffèrent.");
+          }
+          data.purchaseOrderExchangeRate = rate;
+          data.amountInPurchaseOrderCurrency = Math.round(amount * rate * 100) / 100;
+        } else {
+          delete data.amountInPurchaseOrderCurrency;
+        }
         return data;
+      },
+    ],
+    afterChange: [
+      async ({ doc, previousDoc, req }) => {
+        const payload = req.payload as any;
+        const relationId = (value: unknown) =>
+          typeof value === "object" && value !== null ? String((value as { id?: string | number }).id ?? "") : String(value ?? "");
+        const ids = [...new Set([relationId(doc.purchaseOrder), relationId(previousDoc?.purchaseOrder)].filter(Boolean))];
+        for (const purchaseOrderId of ids) {
+          const purchaseOrder = await payload.findByID({
+            collection: "purchase-orders",
+            id: purchaseOrderId,
+            depth: 0,
+            overrideAccess: true,
+          });
+          const payments = await payload.find({
+            collection: "cash-transactions",
+            where: {
+              and: [
+                { purchaseOrder: { equals: purchaseOrderId } },
+                { transactionType: { equals: "supplier_payment" } },
+                { status: { equals: "confirmed" } },
+              ],
+            },
+            limit: 10000,
+            depth: 0,
+            overrideAccess: true,
+          });
+          const paid = payments.docs.reduce((sum: number, payment: Record<string, unknown>) =>
+            sum + Number(payment.amountInPurchaseOrderCurrency ?? 0), 0);
+          const total = Number(purchaseOrder.totalAmount ?? 0);
+          await payload.update({
+            collection: "purchase-orders",
+            id: purchaseOrderId,
+            overrideAccess: true,
+            data: {
+              amountPaid: Math.round(paid * 100) / 100,
+              balanceDue: Math.max(0, Math.round((total - paid) * 100) / 100),
+            },
+          });
+        }
+        return doc;
       },
     ],
   },
