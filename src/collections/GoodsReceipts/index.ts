@@ -117,19 +117,47 @@ export const GoodsReceipts: CollectionConfig = {
       },
     ],
     beforeValidate: [
-      ({ data, operation }) => {
+      async ({ data, operation, req, originalDoc }) => {
         if (!data) return data;
         if (operation === "create" && !data.receiptReference) {
           const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
           data.receiptReference = `GR-${stamp}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
         }
-        for (const item of (Array.isArray(data.items) ? data.items : []) as Array<Record<string, unknown>>) {
+        const purchaseOrderValue = data.purchaseOrder ?? originalDoc?.purchaseOrder;
+        const purchaseOrderId = typeof purchaseOrderValue === "object" && purchaseOrderValue ? purchaseOrderValue.id : purchaseOrderValue;
+        if (!purchaseOrderId) throw new Error("Toute réception doit être rattachée à un bon de commande fournisseur.");
+        const payload = req.payload as any;
+        const po = await payload.findByID({ collection: "purchase-orders", id: purchaseOrderId, depth: 0, overrideAccess: true });
+        if (!po || !Array.isArray(po.items)) throw new Error("Bon de commande introuvable ou sans lignes.");
+        const orderLines = new Map<string, Record<string, unknown>>(po.items.map((line: Record<string, unknown>) => [String(line.id), line]));
+        const currentReceiptId = originalDoc?.id;
+        const otherReceipts = await payload.find({
+          collection: "goods-receipts",
+          where: { and: [{ purchaseOrder: { equals: purchaseOrderId } }, ...(currentReceiptId ? [{ id: { not_equals: currentReceiptId } }] : [])] },
+          limit: 10000, depth: 0, overrideAccess: true,
+        });
+        const previouslyAccepted = new Map<string, number>();
+        for (const receipt of otherReceipts.docs) {
+          if (!["accepted", "accepted_with_reservations"].includes(String(receipt.status))) continue;
+          for (const line of Array.isArray(receipt.items) ? receipt.items : []) {
+            const key = String(line.purchaseOrderItemID ?? "");
+            previouslyAccepted.set(key, (previouslyAccepted.get(key) ?? 0) + Number(line.quantityReceived ?? 0));
+          }
+        }
+        for (const item of (Array.isArray(data.items) ? data.items : (originalDoc?.items ?? [])) as Array<Record<string, unknown>>) {
           const expected = Number(item.quantityExpected);
           const received = Number(item.quantityReceived);
           const damaged = Number(item.damagedQuantity ?? 0);
           const missing = Number(item.missingQuantity ?? 0);
-          if (![expected, received, damaged, missing].every(Number.isFinite) || expected < 0 || received < 0 || damaged < 0 || missing < 0 || damaged > received) {
+          const lineId = String(item.purchaseOrderItemID ?? "");
+          const orderedLine = orderLines.get(lineId);
+          if (![expected, received, damaged, missing].every(Number.isFinite) || expected < 0 || received < 0 || damaged < 0 || missing < 0 || damaged > received || damaged + missing > expected) {
             throw new Error("Vérifiez les quantités attendues, reçues, endommagées et manquantes.");
+          }
+          if (!orderedLine) throw new Error("Une ligne de réception ne correspond pas à une ligne de ce bon de commande.");
+          const orderedQty = Number(orderedLine.quantity ?? 0);
+          if (expected > orderedQty || (previouslyAccepted.get(lineId) ?? 0) + received > orderedQty) {
+            throw new Error("La quantité réceptionnée cumulée ne peut pas dépasser la quantité commandée.");
           }
         }
         return data;
