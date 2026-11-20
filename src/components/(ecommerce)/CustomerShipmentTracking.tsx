@@ -10,6 +10,7 @@ type ShipmentEvent = {
   carrier?: string | null;
   trackingCode?: string | null;
   trackingUrl?: string | null;
+  customerMessage?: string | null;
 };
 
 const labels: Record<string, string> = {
@@ -81,6 +82,9 @@ export const CustomerShipmentTracking = ({ orderId }: { orderId: string }) => {
                 <p className="mt-1 text-sm text-gray-600">
                   {[event.location, event.carrier].filter(Boolean).join(" · ")}
                 </p>
+              )}
+              {event.customerMessage && (
+                <p className="mt-2 text-sm text-gray-700">{event.customerMessage}</p>
               )}
               {event.trackingCode && (
                 <p className="mt-1 text-sm text-gray-600">Numéro de suivi : {event.trackingCode}</p>
