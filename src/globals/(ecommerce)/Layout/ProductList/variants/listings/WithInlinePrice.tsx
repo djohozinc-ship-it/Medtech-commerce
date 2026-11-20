@@ -13,9 +13,13 @@ export const WithInlinePrice = ({ products }: { products: Product[] }) => {
     <>
       {products.map((product) => {
         if (typeof product.images[0] !== "string") {
+          const medtechProduct = product as Product & { salesMode?: string | null; availabilityMode?: string | null };
           const priceRange = getPriceRange(product.variants, product.enableVariantPrices ?? false);
 
           let pricingComponent: ReactNode;
+          if (medtechProduct.salesMode === "quote") {
+            pricingComponent = <span className="text-sm font-semibold text-main-700">Sur devis</span>;
+          } else
 
           if (priceRange?.length === 2) {
             pricingComponent = (
@@ -37,6 +41,11 @@ export const WithInlinePrice = ({ products }: { products: Product[] }) => {
                 resource={product.images[0]}
                 className="aspect-square w-full overflow-clip rounded-md object-cover group-hover:opacity-75 lg:max-h-80"
               />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {medtechProduct.availabilityMode === "in_stock" && <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">Stock à confirmer</span>}
+                {medtechProduct.availabilityMode === "on_order" && <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">Sur commande</span>}
+                {medtechProduct.availabilityMode === "to_confirm" && <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">Disponibilité à confirmer</span>}
+              </div>
               <div className="mt-4 flex justify-between">
                 <div className="w-3/5">
                   <h3 className="text-sm text-gray-700">
