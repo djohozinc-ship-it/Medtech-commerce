@@ -44,14 +44,18 @@ export const WarehouseInspections: CollectionConfig = {
   ],
   hooks: {
     beforeValidate: [
-      ({ data }) => {
+      ({ data, originalDoc }) => {
         if (!data) return data;
-        const expected = data.quantityExpected == null ? undefined : Number(data.quantityExpected);
-        const received = data.quantityReceived == null ? undefined : Number(data.quantityReceived);
-        const damaged = Number(data.damagedQuantity ?? 0);
-        const missing = Number(data.missingQuantity ?? 0);
-        const packagesExpected = data.packagesExpected == null ? undefined : Number(data.packagesExpected);
-        const packagesReceived = data.packagesReceived == null ? undefined : Number(data.packagesReceived);
+        const expectedValue = data.quantityExpected ?? originalDoc?.quantityExpected;
+        const receivedValue = data.quantityReceived ?? originalDoc?.quantityReceived;
+        const expected = expectedValue == null ? undefined : Number(expectedValue);
+        const received = receivedValue == null ? undefined : Number(receivedValue);
+        const damaged = Number(data.damagedQuantity ?? originalDoc?.damagedQuantity ?? 0);
+        const missing = Number(data.missingQuantity ?? originalDoc?.missingQuantity ?? 0);
+        const packagesExpectedValue = data.packagesExpected ?? originalDoc?.packagesExpected;
+        const packagesReceivedValue = data.packagesReceived ?? originalDoc?.packagesReceived;
+        const packagesExpected = packagesExpectedValue == null ? undefined : Number(packagesExpectedValue);
+        const packagesReceived = packagesReceivedValue == null ? undefined : Number(packagesReceivedValue);
         const values = [expected, received, damaged, missing, packagesExpected, packagesReceived].filter((value): value is number => value !== undefined);
         if (!values.every(Number.isFinite) || values.some((value) => value < 0) ||
             (received !== undefined && damaged > received) ||
@@ -60,10 +64,11 @@ export const WarehouseInspections: CollectionConfig = {
             (packagesExpected !== undefined && packagesReceived !== undefined && packagesReceived > packagesExpected)) {
           throw new Error("Les quantités de colis et de produits inspectés sont incohérentes.");
         }
-        if (data.result === "passed" && (damaged > 0 || missing > 0)) {
+        const result = data.result ?? originalDoc?.result;
+        if (result === "passed" && (damaged > 0 || missing > 0)) {
           throw new Error("Une inspection avec des produits endommagés ou manquants doit être validée avec réserves ou déclarée non conforme.");
         }
-        if (data.result === "passed_with_reservations" && damaged + missing === 0) {
+        if (result === "passed_with_reservations" && damaged + missing === 0) {
           throw new Error("Indiquez au moins une réserve réelle ou choisissez « Conforme ».");
         }
         return data;
