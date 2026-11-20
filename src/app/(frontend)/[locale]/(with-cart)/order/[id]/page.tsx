@@ -26,7 +26,7 @@ const OrdersPage = async ({ params }: { params: Promise<{ locale: Locale; id: st
 
   const customer = await getCustomer();
   const orderCustomerId = typeof order.customer === "string" ? order.customer : order.customer?.id;
-  if (orderCustomerId && (!customer || String(customer.id) !== String(orderCustomerId))) {
+  if (!customer || !orderCustomerId || String(customer.id) !== String(orderCustomerId)) {
     notFound();
   }
 
