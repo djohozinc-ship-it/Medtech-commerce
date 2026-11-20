@@ -1,4 +1,5 @@
 import { type Access, type CollectionConfig } from "payload";
+import { sendEmail } from "@/utilities/nodemailer";
 
 const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
 
@@ -106,6 +107,58 @@ export const PurchaseOrders: CollectionConfig = {
     { name: "attachments", type: "relationship", relationTo: "media", hasMany: true, label: "Pièces jointes (pro forma, échanges, spécifications)" },
   ],
   hooks: {
+    afterChange: [
+      async ({ doc, previousDoc, req }) => {
+        if (doc.status !== "sent_to_supplier" || previousDoc?.status === "sent_to_supplier") return doc;
+        const payload = req.payload as any;
+        const supplierId = typeof doc.supplier === "object" ? doc.supplier?.id : doc.supplier;
+        if (!supplierId) return doc;
+        const supplier = await payload.findByID({
+          collection: "suppliers",
+          id: supplierId,
+          depth: 0,
+          overrideAccess: true,
+        });
+        if (!supplier?.email) {
+          req.payload.logger.warn({ msg: "Purchase order marked sent but supplier has no email address", purchaseOrder: doc.purchaseOrderReference });
+          return doc;
+        }
+        const escapeHtml = (value: unknown) =>
+          String(value ?? "").replace(/[&<>"']/g, (character) => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+          })[character] ?? character);
+        const currency = String(doc.currency ?? "CNY");
+        const rows = (Array.isArray(doc.items) ? doc.items : []).map((item: Record<string, unknown>) =>
+          `<tr><td style="padding:8px;border:1px solid #ddd">${escapeHtml(item.productName)}</td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(item.model)}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">${Number(item.quantity ?? 0)}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">${Number(item.unitPrice ?? 0).toLocaleString("fr-FR")} ${escapeHtml(currency)}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">${Number(item.lineTotal ?? 0).toLocaleString("fr-FR")} ${escapeHtml(currency)}</td></tr>`,
+        ).join("");
+        const html = `<div style="font-family:Arial,sans-serif;max-width:760px;margin:auto;color:#172033">
+          <h2>Bon de commande ${escapeHtml(doc.purchaseOrderReference)}</h2>
+          <p>Bonjour ${escapeHtml(supplier.contactName || supplier.companyName)},</p>
+          <p>Veuillez trouver ci-dessous notre commande fournisseur. Merci de confirmer par retour d'e-mail les quantités, les références, le délai de préparation et les coordonnées de paiement.</p>
+          <p><strong>Référence :</strong> ${escapeHtml(doc.purchaseOrderReference)}<br/>
+          <strong>Date :</strong> ${escapeHtml(doc.orderDate)}<br/>
+          <strong>Devise :</strong> ${escapeHtml(currency)}</p>
+          <table style="border-collapse:collapse;width:100%"><thead><tr><th style="padding:8px;border:1px solid #ddd">Désignation</th><th style="padding:8px;border:1px solid #ddd">Modèle</th><th style="padding:8px;border:1px solid #ddd">Qté</th><th style="padding:8px;border:1px solid #ddd">Prix unitaire</th><th style="padding:8px;border:1px solid #ddd">Total</th></tr></thead><tbody>${rows}</tbody></table>
+          <p>Marchandises : <strong>${Number(doc.goodsSubtotal ?? 0).toLocaleString("fr-FR")} ${escapeHtml(currency)}</strong><br/>
+          Transport Chine : ${Number(doc.chinaDomesticShipping ?? 0).toLocaleString("fr-FR")} ${escapeHtml(currency)}<br/>
+          Autres frais : ${Number(doc.otherSupplierCharges ?? 0).toLocaleString("fr-FR")} ${escapeHtml(currency)}<br/>
+          <strong>Total commande : ${Number(doc.totalAmount ?? 0).toLocaleString("fr-FR")} ${escapeHtml(currency)}</strong></p>
+          <p>Conditions de paiement : ${escapeHtml(doc.paymentTerms || "À confirmer")}<br/>Date de disponibilité souhaitée : ${escapeHtml(doc.expectedReadyDate || "À confirmer")}</p>
+          <p>Merci de confirmer la réception de ce bon de commande et de ne procéder à aucune substitution de modèle ou de spécification sans accord écrit.</p>
+          <p>Medtech Commerce</p>
+        </div>`;
+        try {
+          await sendEmail({
+            to: String(supplier.email),
+            subject: `Bon de commande ${doc.purchaseOrderReference} — Medtech Commerce`,
+            html,
+          });
+        } catch (error) {
+          req.payload.logger.error({ err: error, msg: "Unable to email supplier purchase order", purchaseOrder: doc.purchaseOrderReference });
+        }
+        return doc;
+      },
+    ],
     beforeValidate: [
       ({ data, originalDoc, operation, req }) => {
         if (!data) return data;
