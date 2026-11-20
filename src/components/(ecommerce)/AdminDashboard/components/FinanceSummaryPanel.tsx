@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type FinanceSummary = {
   currency: "XOF";
@@ -23,11 +24,14 @@ export const FinanceSummaryPanel = () => {
   const [data, setData] = useState<FinanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const searchParams = useSearchParams();
+  const dateFrom = searchParams.get("from");
+  const dateTo = searchParams.get("to");
 
   useEffect(() => {
     let active = true;
     axios
-      .post<FinanceSummary>("/api/orders/finance-summary", {}, { withCredentials: true })
+      .post<FinanceSummary>("/api/orders/finance-summary", { dateFrom: dateFrom ?? undefined, dateTo: dateTo ?? undefined }, { withCredentials: true })
       .then(({ data: result }) => {
         if (active) setData(result);
       })
@@ -40,7 +44,7 @@ export const FinanceSummaryPanel = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [dateFrom, dateTo]);
 
   const metrics = [
     { label: "Encaissements clients confirmés", value: data?.confirmedCustomerReceiptsXOF },
