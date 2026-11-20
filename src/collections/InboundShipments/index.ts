@@ -70,7 +70,8 @@ export const InboundShipments: CollectionConfig = {
       { label: "Clôturé", value: "closed" },
       { label: "Incident", value: "exception" },
     ] },
-    { name: "exceptionNotes", type: "textarea", label: "Incident / retard / dommage" },
+    { name: "exceptionNotes", type: "textarea", label: "Incident / retard / dommage (interne)" },
+    { name: "customerUpdate", type: "textarea", label: "Message de suivi destiné au client" },
     { name: "internalNotes", type: "textarea", label: "Notes internes" },
   ],
   hooks: {
@@ -175,7 +176,7 @@ export const InboundShipments: CollectionConfig = {
               carrier: doc.freightForwarder,
               trackingCode: doc.trackingNumber,
               trackingUrl: doc.trackingUrl,
-              note: doc.exceptionNotes || "",
+              note: doc.customerUpdate || "",
               visibleToCustomer: true,
             },
           });
