@@ -1,4 +1,4 @@
-import type { CollectionConfig } from "payload";
+import type { Access, CollectionConfig } from "payload";
 
 import { sendEmail } from "@/utilities/nodemailer";
 import { getMySourcingRequests, respondToSourcingQuote } from "@/endpoints/sourcing/requests";
@@ -7,8 +7,7 @@ import { getMySourcingRequests, respondToSourcingQuote } from "@/endpoints/sourc
  * Sourcing requests are public to submit, but private to administrators.
  * Customers access their own records through the /mine endpoint.
  */
-const administratorsOnly = ({ req }: { req: { user?: { collection?: string } | null } }) =>
-  req.user?.collection === "administrators";
+const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
 
 export const SourcingRequests: CollectionConfig = {
   slug: "sourcing-requests",
