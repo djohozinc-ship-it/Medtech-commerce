@@ -71,6 +71,7 @@ export const CashTransactions: CollectionConfig = {
         { label: "Espèces", value: "cash" },
         { label: "Virement bancaire", value: "bank_transfer" },
         { label: "Mobile Money — saisie manuelle", value: "mobile_money_manual" },
+        { label: "Mobile Money — passerelle FedaPay", value: "mobile_money_gateway" },
         { label: "Carte — saisie manuelle", value: "card_manual" },
         { label: "Paiement via plateforme fournisseur", value: "supplier_platform" },
         { label: "Autre / à préciser", value: "other" },
