@@ -228,8 +228,10 @@ export const CashTransactions: CollectionConfig = {
               limit: 10000, depth: 0, overrideAccess: true,
             });
             const currentId = originalDoc?.id ? String(originalDoc.id) : "";
-            const alreadyPaid = existing.docs.reduce((sum: number, item: Record<string, unknown>) =>
-              String(item.id) === currentId ? sum : sum + Number(item.amountInPurchaseOrderCurrency ?? 0), 0);
+            const alreadyPaid = existing.docs
+              .filter((item) => String(item.id) !== currentId)
+              .map((item) => Number(item.amountInPurchaseOrderCurrency ?? 0))
+              .reduce((sum, amount) => sum + amount, 0);
             if (alreadyPaid + Number(data.amountInPurchaseOrderCurrency) > Number(purchaseOrder.totalAmount ?? 0) + 0.01) {
               throw new Error("Ce paiement dépasserait le montant total du bon de commande. Vérifiez les paiements déjà confirmés.");
             }
@@ -266,8 +268,9 @@ export const CashTransactions: CollectionConfig = {
             depth: 0,
             overrideAccess: true,
           });
-          const paid = payments.docs.reduce((sum: number, payment: Record<string, unknown>) =>
-            sum + Number(payment.amountInPurchaseOrderCurrency ?? 0), 0);
+          const paid = payments.docs
+            .map((payment) => Number(payment.amountInPurchaseOrderCurrency ?? 0))
+            .reduce((sum, amount) => sum + amount, 0);
           const total = Number(purchaseOrder.totalAmount ?? 0);
           await payload.update({
             collection: "purchase-orders",
