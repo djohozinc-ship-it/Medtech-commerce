@@ -250,7 +250,8 @@
       "orders": "Commandes",
       "settings": "Paramètres",
       "orders-data": "Data for orders",
-      "help": "Help"
+      "help": "Help",
+      "sourcing": "Demandes de devis"
     },
     "orders": {
       "title": "Commandes",
