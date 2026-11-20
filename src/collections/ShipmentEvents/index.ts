@@ -108,6 +108,11 @@ export const ShipmentEvents: CollectionConfig = {
       label: "Note interne ou précision",
     },
     {
+      name: "customerMessage",
+      type: "textarea",
+      label: "Message destiné au client",
+    },
+    {
       name: "visibleToCustomer",
       type: "checkbox",
       label: "Afficher cet événement au client",
