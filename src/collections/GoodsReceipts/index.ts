@@ -58,6 +58,16 @@ export const GoodsReceipts: CollectionConfig = {
     { name: "deliveryNote", type: "relationship", relationTo: "media", label: "Bon de livraison fournisseur" },
     { name: "disputeOpened", type: "checkbox", defaultValue: false, label: "Litige fournisseur ouvert" },
     { name: "disputeReference", type: "text", label: "Référence de réclamation" },
+    { name: "disputeStatus", type: "select", defaultValue: "not_opened", options: [
+      { label: "Aucun litige", value: "not_opened" },
+      { label: "À transmettre au fournisseur", value: "to_submit" },
+      { label: "En cours de traitement", value: "in_progress" },
+      { label: "Avoir / remplacement promis", value: "compensation_promised" },
+      { label: "Résolu", value: "resolved" },
+      { label: "Rejeté par le fournisseur", value: "rejected" },
+    ], label: "État de la réclamation" },
+    { name: "compensationAmount", type: "number", min: 0, label: "Montant de compensation obtenu" },
+    { name: "compensationCurrency", type: "select", options: [{ label: "CNY", value: "CNY" }, { label: "USD", value: "USD" }, { label: "EUR", value: "EUR" }, { label: "XOF", value: "XOF" }], label: "Devise de la compensation" },
     { name: "resolutionNotes", type: "textarea", label: "Résolution / compensation convenue" },
     { name: "internalNotes", type: "textarea", label: "Notes internes" },
   ],
@@ -102,7 +112,7 @@ export const GoodsReceipts: CollectionConfig = {
           if (receivedQuantity < quantity) allReceived = false;
           return { ...item, receivedQuantity };
         });
-        const nextStatus = allReceived && anyReceived ? "received" : anyReceived ? "partially_received" : purchaseOrder.status;
+        const nextStatus = allReceived && anyReceived ? "received" : anyReceived ? "partially_received" : ["received", "partially_received"].includes(String(purchaseOrder.status)) ? "acknowledged" : purchaseOrder.status;
         await payload.update({
           collection: "purchase-orders",
           id: purchaseOrderId,
@@ -110,7 +120,7 @@ export const GoodsReceipts: CollectionConfig = {
           data: {
             items,
             status: nextStatus,
-            ...(nextStatus === "received" ? { receivedAt: new Date().toISOString() } : {}),
+            ...(nextStatus === "received" ? { receivedAt: new Date().toISOString() } : nextStatus === "acknowledged" ? { receivedAt: null } : {}),
           },
         });
         return doc;
@@ -129,7 +139,7 @@ export const GoodsReceipts: CollectionConfig = {
         const payload = req.payload as any;
         const po = await payload.findByID({ collection: "purchase-orders", id: purchaseOrderId, depth: 0, overrideAccess: true });
         if (!po || !Array.isArray(po.items)) throw new Error("Bon de commande introuvable ou sans lignes.");
-        if (!["acknowledged", "partially_received"].includes(String(po.status))) {
+        if (!["acknowledged", "partially_received"].includes(String(po.status)) && !originalDoc) {
           throw new Error("Le fournisseur doit avoir confirmé le bon de commande avant toute réception.");
         }
         const orderLines = new Map<string, Record<string, unknown>>(po.items.map((line: Record<string, unknown>) => [String(line.id), line]));
