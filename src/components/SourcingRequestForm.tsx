@@ -89,7 +89,8 @@ export function SourcingRequestForm() {
         throw new Error(result?.errors?.[0]?.message || "La demande n'a pas pu être enregistrée.");
       }
       setState("success");
-      setMessage("Ta demande a bien été transmise. Notre équipe pourra l'examiner depuis l'administration.");
+      const reference = result.doc.requestReference ? ` Référence : ${result.doc.requestReference}.` : "";
+      setMessage(`Ta demande a bien été transmise.${reference} Pour suivre le devis, crée un compte ou connecte-toi avec cette même adresse e-mail.`);
       form.reset();
       setFiles([]);
     } catch (error) {
