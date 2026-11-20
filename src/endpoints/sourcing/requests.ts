@@ -133,7 +133,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
     const expiryDate = sourcingRequest.quoteValidUntil ? new Date(sourcingRequest.quoteValidUntil) : undefined;
     if (expiryDate) expiryDate.setUTCHours(23, 59, 59, 999);
     const expiry = expiryDate?.getTime();
-    if (expiry && (!Number.isFinite(expiry) || expiry < Date.now())) {
+    if (expiryDate && (!Number.isFinite(expiry) || expiry < Date.now())) {
       await payload.update({
         collection: "sourcing-requests",
         id: requestId,
@@ -166,7 +166,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
 
     const total = amount + shipping;
     const depositPercentage = Number(sourcingRequest.depositPercentage ?? 0);
-    if (!Number.isFinite(total) || total <= 0 || depositPercentage < 0 || depositPercentage > 100) {
+    if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(depositPercentage) || depositPercentage < 0 || depositPercentage > 100) {
       return Response.json({ message: "Les montants du devis sont invalides." }, { status: 422 });
     }
 
