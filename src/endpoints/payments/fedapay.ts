@@ -204,7 +204,7 @@ const confirmFedaPayTransaction = async (req: PayloadRequest, remoteId: string) 
         status: "confirmed",
         amount,
         currency: "XOF",
-        paymentMethod: "mobile_money_manual",
+        paymentMethod: "mobile_money_gateway",
         paymentProvider: "FedaPay",
         providerTransactionId: remoteId,
         transactionDate: new Date().toISOString(),
