@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { mongooseAdapter } from "@payloadcms/db-mongodb";
 import { s3Storage } from "@payloadcms/storage-s3";
 import { en } from "@payloadcms/translations/languages/en";
+import { fr } from "@payloadcms/translations/languages/fr";
 import { pl } from "@payloadcms/translations/languages/pl";
 import { buildConfig } from "payload";
 import sharp from "sharp"; // sharp-import
@@ -102,13 +103,13 @@ export default buildConfig({
     },
   },
   i18n: {
-    supportedLanguages: { en, pl },
-    fallbackLanguage: "en",
+    supportedLanguages: { fr, en, pl },
+    fallbackLanguage: "fr",
     translations: customTranslationsObject,
   },
   localization: {
-    locales: ["en", "pl"],
-    defaultLocale: "en",
+    locales: ["fr", "en", "pl"],
+    defaultLocale: "fr",
   },
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
