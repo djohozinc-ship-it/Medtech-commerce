@@ -24,6 +24,12 @@ export const LandedCostEstimates: CollectionConfig = {
   fields: [
     { name: "estimateReference", type: "text", required: true, unique: true, label: "Référence de simulation" },
     { name: "supplierOffer", type: "relationship", relationTo: "supplier-offers", required: true, label: "Offre fournisseur" },
+    { name: "purchaseOrder", type: "relationship", relationTo: "purchase-orders", label: "Bon de commande réellement exécuté" },
+    { name: "inboundShipment", type: "relationship", relationTo: "inbound-shipments", label: "Expédition internationale associée" },
+    { name: "costStage", type: "select", defaultValue: "estimate", options: [{ label: "Estimation avant achat", value: "estimate" }, { label: "Coûts réels après réception", value: "actual" }], label: "Nature du calcul" },
+    { name: "exchangeRateSource", type: "text", label: "Source du taux de change (banque, transfert, justificatif)" },
+    { name: "exchangeRateDate", type: "date", label: "Date du taux de change appliqué" },
+    { name: "costEvidence", type: "relationship", relationTo: "media", hasMany: true, label: "Factures, quittances et justificatifs des coûts" },
     { name: "purchaseOrder", type: "relationship", relationTo: "purchase-orders", label: "Bon de commande fournisseur" },
     { name: "productName", type: "text", required: true, label: "Produit" },
     { name: "quantity", type: "number", required: true, min: 1, label: "Quantité à acheter" },
