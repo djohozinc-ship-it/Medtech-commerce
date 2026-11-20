@@ -57,7 +57,7 @@ export const ProductReviews: CollectionConfig = {
       relationTo: "customers",
       required: true,
       access: {
-        update: administratorsOnly,
+        update: ({ req }) => req.user?.collection === "administrators",
       },
     },
     {
