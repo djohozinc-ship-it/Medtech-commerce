@@ -181,7 +181,7 @@ export const Customers: CollectionConfig = {
             },
             {
               name: "country",
-              type: "select",
+              type: "text",
               label: {
                 en: "Country",
                 pl: "Kraj",
@@ -189,7 +189,9 @@ export const Customers: CollectionConfig = {
               admin: {
                 width: "50%",
               },
-              options: [...countryList],
+              validate: (value) =>
+                countryList.some((country) => country.value === value) ||
+                "Select a supported country.",
               required: true,
             },
           ],
