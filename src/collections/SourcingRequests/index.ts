@@ -209,8 +209,22 @@ export const SourcingRequests: CollectionConfig = {
   ],
   hooks: {
     beforeValidate: [
-      ({ data }) => {
-        if (data && !data.requestReference) {
+      ({ data, req }) => {
+        if (!data) return data;
+
+        // Les visiteurs peuvent soumettre une demande, mais jamais modifier
+        // son statut, le devis ou les notes réservées à l'administration.
+        const isAdmin = req.user?.collection === "administrators";
+        if (!isAdmin) {
+          data.status = "received";
+          delete data.quotedAmount;
+          delete data.quotedCurrency;
+          delete data.depositPercentage;
+          delete data.quoteValidUntil;
+          delete data.internalNotes;
+        }
+
+        if (!data.requestReference || !isAdmin) {
           const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
           data.requestReference = `SRC-${stamp}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
         }
