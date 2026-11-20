@@ -145,13 +145,15 @@ export const createFedaPayPayment = async (req: PayloadRequest) => {
       throw new Error("FedaPay did not return a valid hosted payment URL");
     }
 
-    const reference = `FDP-${String(order.id)}-${String(remoteId)}`;
+    const orderRecordId = idOf(order.id);
+    if (!orderRecordId) throw new Error("Invalid order identifier");
+    const reference = `FDP-${orderRecordId}-${String(remoteId)}`;
     await req.payload.create({
       collection: "payment-attempts",
       overrideAccess: true,
       data: {
         paymentReference: reference,
-        order: order.id,
+        order: orderRecordId,
         customer: req.user.id,
         provider: "fedapay",
         providerTransactionId: String(remoteId),
@@ -233,7 +235,9 @@ const confirmFedaPayTransaction = async (req: PayloadRequest, remoteId: string) 
     });
     cashTransactionId = cash.id;
   } else {
-    cashTransactionId = (duplicate.docs[0] as unknown as UnknownRecord).id;
+    const duplicateId = idOf((duplicate.docs[0] as unknown as UnknownRecord).id);
+    if (!duplicateId) throw new Error("Invalid cash transaction identifier");
+    cashTransactionId = duplicateId;
   }
 
   const existingAllocation = await req.payload.find({
