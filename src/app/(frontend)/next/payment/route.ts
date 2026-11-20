@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       checkoutData: CheckoutFormData;
       currency: Currency;
     };
-    if (!checkoutData?.shipping || selectedCountry !== checkoutData.shipping.country) {
+    if (checkoutData?.shipping?.country !== selectedCountry) {
       return Response.json({ status: 400, message: "Le pays de livraison sélectionné ne correspond pas aux coordonnées de livraison." });
     }
     if (!["fr", "en", "pl"].includes(locale)) {
