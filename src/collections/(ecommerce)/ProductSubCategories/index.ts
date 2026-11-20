@@ -23,10 +23,12 @@ export const ProductSubCategories: CollectionConfig = {
   labels: {
     singular: {
       en: "Product Subcategory",
+      fr: "Sous-catégorie de produits",
       pl: "Podkategoria produktu",
     },
     plural: {
       en: "Product Subcategories",
+      fr: "Sous-catégories de produits",
       pl: "Podkategorie produktów",
     },
   },
