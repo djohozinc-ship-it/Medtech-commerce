@@ -258,6 +258,18 @@ export const PurchaseOrders: CollectionConfig = {
 
         const existingItems = Array.isArray(originalDoc?.items) ? originalDoc.items : [];
         const items = Array.isArray(data.items) ? data.items : existingItems;
+        for (const line of items as Array<Record<string, unknown>>) {
+          const lineOfferValue = line.supplierOffer;
+          const lineOfferId = typeof lineOfferValue === "object" && lineOfferValue ? (lineOfferValue as { id?: string | number }).id : lineOfferValue;
+          if (!lineOfferId) continue;
+          const lineOffer = await (req.payload as any).findByID({ collection: "supplier-offers", id: lineOfferId, depth: 0, overrideAccess: true });
+          if (!lineOffer || lineOffer.quoteStatus !== "approved") throw new Error("Chaque offre associée à une ligne d'achat doit être validée.");
+          const supplierValue = data.supplier ?? originalDoc?.supplier;
+          const supplierId = typeof supplierValue === "object" && supplierValue ? (supplierValue as { id?: string | number }).id : supplierValue;
+          const lineSupplierId = typeof lineOffer.supplier === "object" && lineOffer.supplier ? lineOffer.supplier.id : lineOffer.supplier;
+          if (String(supplierId) !== String(lineSupplierId)) throw new Error("Une ligne d'achat référence une offre d'un autre fournisseur.");
+          if (Number(line.quantity) < Number(lineOffer.minimumOrderQuantity ?? 1)) throw new Error("La quantité commandée est inférieure au minimum exigé par le fournisseur.");
+        }
         let subtotal = 0;
         for (const item of items as PurchaseLine[]) {
           const quantity = numeric(item.quantity);
