@@ -26,6 +26,9 @@ import { Posts } from "./collections/Posts";
 import { ShipmentEvents } from "./collections/ShipmentEvents";
 import { SourcingRequests } from "./collections/SourcingRequests";
 import { SourcingAttachments } from "./collections/SourcingAttachments";
+import { Suppliers } from "./collections/Suppliers";
+import { SupplierOffers } from "./collections/SupplierOffers";
+import { LandedCostEstimates } from "./collections/LandedCostEstimates";
 import { InPostCourier } from "./globals/(ecommerce)/Couriers/InPostCourier/config";
 import { InPostCourierCOD } from "./globals/(ecommerce)/Couriers/InPostCourierCOD/config";
 import { InPostPickup } from "./globals/(ecommerce)/Couriers/InPostPickup/config";
@@ -131,6 +134,9 @@ export default buildConfig({
     ShipmentEvents,
     SourcingRequests,
     SourcingAttachments,
+    Suppliers,
+    SupplierOffers,
+    LandedCostEstimates,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [
