@@ -54,10 +54,38 @@ export const Suppliers: CollectionConfig = {
     { name: "website", type: "text", label: "Site web" },
     { name: "platformProfileUrl", type: "text", label: "Profil Alibaba / 1688 / Made-in-China" },
     { name: "paymentTerms", type: "textarea", label: "Conditions de paiement" },
+    { name: "beneficiaryName", type: "text", label: "Nom du bénéficiaire bancaire" },
+    { name: "bankName", type: "text", label: "Banque du fournisseur" },
+    { name: "bankCountry", type: "text", label: "Pays de la banque" },
+    { name: "bankAddress", type: "textarea", label: "Adresse de la banque" },
+    { name: "bankAccountNumber", type: "text", label: "Numéro de compte / IBAN" },
+    { name: "swiftCode", type: "text", label: "Code SWIFT / BIC" },
+    { name: "alipayOrWechatPay", type: "text", label: "Identifiant Alipay / WeChat Pay professionnel" },
+    { name: "paymentDetailsVerified", type: "checkbox", defaultValue: false, label: "Coordonnées de paiement vérifiées indépendamment" },
     { name: "defaultLeadTimeDays", type: "number", min: 0, label: "Délai habituel (jours)" },
     { name: "internalRating", type: "number", min: 1, max: 5, label: "Évaluation interne (1 à 5)" },
     { name: "internalNotes", type: "textarea", label: "Notes internes" },
     { name: "documents", type: "relationship", relationTo: "media", hasMany: true, label: "Documents de vérification" },
   ],
+  hooks: {
+    beforeValidate: [
+      ({ data, originalDoc }) => {
+        if (!data) return data;
+        const status = data.verificationStatus ?? originalDoc?.verificationStatus;
+        if (status === "verified") {
+          const company = data.companyName ?? originalDoc?.companyName;
+          const contact = data.contactName ?? originalDoc?.contactName;
+          const email = data.email ?? originalDoc?.email;
+          const phone = data.phone ?? originalDoc?.phone;
+          const country = data.country ?? originalDoc?.country;
+          const documents = data.documents ?? originalDoc?.documents;
+          if (!company || !contact || !email || !phone || !country || !Array.isArray(documents) || documents.length === 0) {
+            throw new Error("Pour vérifier un fournisseur, renseignez l'entreprise, le contact, l'e-mail, le téléphone, le pays et au moins un document justificatif.");
+          }
+        }
+        return data;
+      },
+    ],
+  },
   timestamps: true,
 };
