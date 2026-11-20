@@ -133,7 +133,6 @@ export const InboundShipments: CollectionConfig = {
         const eventStatus: Record<string, string> = {
           received_china: "arrived_china_warehouse",
           consolidation: "consolidated",
-          ready_to_ship: "consolidated",
           shipped: "departed_china",
           arrived_benin: "arrived_benin",
           customs: "customs_clearance",
@@ -147,7 +146,7 @@ export const InboundShipments: CollectionConfig = {
           const orderId = typeof orderValue === "object" && orderValue ? orderValue.id : orderValue;
           if (orderId) orderIds.add(String(orderId));
         }
-        if (orderIds.size === 0) {
+        {
           for (const purchaseOrderValue of Array.isArray(doc.purchaseOrders) ? doc.purchaseOrders : []) {
             const purchaseOrderId = typeof purchaseOrderValue === "object" && purchaseOrderValue ? purchaseOrderValue.id : purchaseOrderValue;
             if (!purchaseOrderId) continue;
