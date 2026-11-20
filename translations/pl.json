@@ -22,7 +22,23 @@
     "additional-details": "Dodatkowe szczegóły",
     "add-to-favs": "Dodaj do ulubionych",
     "stock-left": "Pozostało na stanie:",
-    "maximum-stock": "Masz już maksymalną ilość tego produktu w koszyku."
+    "maximum-stock": "Masz już maksymalną ilość tego produktu w koszyku.",
+    "technical-sheet": "Specyfikacja techniczna",
+    "manufacturer": "Producent",
+    "brand": "Marka",
+    "model-reference": "Model / referencja",
+    "origin-country": "Kraj pochodzenia",
+    "warranty": "Gwarancja",
+    "lead-time": "Szacowany czas dostawy",
+    "availability": "Dostępność",
+    "in-stock-confirm": "Stan magazynowy do potwierdzenia przed zamówieniem",
+    "on-order": "Na zamówienie",
+    "to-confirm": "Do potwierdzenia",
+    "detailed-specs": "Szczegółowe dane techniczne",
+    "technical-notes": "Uwagi techniczne i zgodność",
+    "documents-available": "Dostępne dokumenty",
+    "verification-note": "Wyświetlone parametry i dokumenty pochodzą z informacji dostarczonych dla tego produktu. Przed zamówieniem sprawdź zgodność, dostępność i wymagane dokumenty.",
+    "quote": "Zapytaj o ofertę"
   },
   "ProductList": {
     "variants-singular": "wariant",
@@ -338,7 +354,6 @@
     },
     "verify-email": {
       "greeting": "Witaj {name},",
-
       "subject": "Zweryfikuj swój adres e-mail",
       "button": "Zweryfikuj e-mail",
       "body": "Kliknij w link poniżej, aby zweryfikować swój adres e-mail"
