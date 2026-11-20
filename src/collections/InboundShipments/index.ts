@@ -137,6 +137,7 @@ export const InboundShipments: CollectionConfig = {
           arrived_benin: "arrived_benin",
           customs: "customs_clearance",
           received_benin: "ready_for_delivery",
+          exception: "exception",
         };
         const mapped = eventStatus[String(doc.status)];
         if (!mapped) return doc;
