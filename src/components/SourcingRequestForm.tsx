@@ -197,7 +197,7 @@ export function SourcingRequestForm() {
       <button type="submit" disabled={busy} className="w-full rounded-xl bg-slate-900 px-6 py-4 font-semibold text-white disabled:opacity-60">
         {state === "uploading" ? "Envoi des fichiers..." : state === "sending" ? "Enregistrement de la demande..." : "Envoyer ma demande"}
       </button>
-      <p className="text-xs text-gray-500">En envoyant ce formulaire, tu autorises l'équipe à utiliser ces informations pour traiter ta demande.</p>
+      <p className="text-xs text-gray-500">En envoyant ce formulaire, tu autorises l&apos;équipe à utiliser ces informations pour traiter ta demande.</p>
     </form>
   );
 }
