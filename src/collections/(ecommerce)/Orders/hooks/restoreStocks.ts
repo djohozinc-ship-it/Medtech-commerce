@@ -42,29 +42,24 @@ export const restoreStocks: FieldHook<Order, Order["orderDetails"]["status"] | u
           continue;
         }
 
-        const productWithUpdatedStock = {
-          ...originalProduct,
-          ...(!originalProduct.enableVariants && {
-            stock: (originalProduct.stock ?? 0) + product.quantity,
-          }),
-          ...(originalProduct.enableVariants && {
-            variants: originalProduct.variants?.map((variant) => {
-              if (variant.variantSlug === product.variantSlug) {
-                return {
-                  ...variant,
-                  stock: (variant.stock ?? 0) + product.quantity,
-                };
-              }
-              return variant;
-            }),
-          }),
-        };
+        const productStockUpdate = originalProduct.enableVariants
+          ? {
+              variants: originalProduct.variants?.map((variant) => {
+                if (variant.variantSlug === product.variantSlug) {
+                  return { ...variant, stock: (variant.stock ?? 0) + product.quantity };
+                }
+                return variant;
+              }),
+            }
+          : { stock: (originalProduct.stock ?? 0) + product.quantity };
 
         updates.push(
           payload.update({
             collection: "products",
             id: productId,
-            data: productWithUpdatedStock,
+            data: productStockUpdate,
+            req,
+            overrideAccess: true,
           }),
         );
       } catch (error) {
@@ -76,9 +71,9 @@ export const restoreStocks: FieldHook<Order, Order["orderDetails"]["status"] | u
     await payload.update({
       collection: "orders",
       id: originalDoc.id,
-      data: {
-        extractedFromStock: false,
-      },
+      data: { extractedFromStock: false },
+      req,
+      overrideAccess: true,
     });
   } catch (error) {
     console.error("Failed to restore stocks:", error);
