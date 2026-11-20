@@ -42,5 +42,42 @@ export const WarehouseInspections: CollectionConfig = {
     { name: "supplierNotified", type: "checkbox", defaultValue: false, label: "Fournisseur informé en cas d'anomalie" },
     { name: "resolutionNotes", type: "textarea", label: "Action corrective / réclamation" },
   ],
+  hooks: {
+    beforeValidate: [
+      ({ data }) => {
+        if (!data) return data;
+        const expected = Number(data.quantityExpected ?? 0);
+        const received = Number(data.quantityReceived ?? 0);
+        const damaged = Number(data.damagedQuantity ?? 0);
+        const missing = Number(data.missingQuantity ?? 0);
+        const packagesExpected = Number(data.packagesExpected ?? 0);
+        const packagesReceived = Number(data.packagesReceived ?? 0);
+        if (![expected, received, damaged, missing, packagesExpected, packagesReceived].every(Number.isFinite) ||
+            [expected, received, damaged, missing, packagesExpected, packagesReceived].some((value) => value < 0) ||
+            damaged > received || missing > expected || received + missing > expected ||
+            packagesReceived > packagesExpected) {
+          throw new Error("Les quantités de colis et de produits inspectés sont incohérentes.");
+        }
+        return data;
+      },
+    ],
+    afterChange: [
+      async ({ doc, req }) => {
+        const receiptValue = doc.goodsReceipt;
+        const receiptId = typeof receiptValue === "object" && receiptValue ? receiptValue.id : receiptValue;
+        if (!receiptId) return doc;
+        const status = doc.result === "passed" ? "accepted"
+          : doc.result === "passed_with_reservations" ? "accepted_with_reservations"
+          : doc.result === "failed" ? "rejected" : "pending_inspection";
+        await (req.payload as any).update({
+          collection: "goods-receipts",
+          id: receiptId,
+          overrideAccess: true,
+          data: { status, inspection: doc.id },
+        });
+        return doc;
+      },
+    ],
+  },
   timestamps: true,
 };
