@@ -68,7 +68,7 @@ export const WarehouseInspections: CollectionConfig = {
         if (result === "passed" && (damaged > 0 || missing > 0)) {
           throw new Error("Une inspection avec des produits endommagés ou manquants doit être validée avec réserves ou déclarée non conforme.");
         }
-        if (result === "passed_with_reservations" && damaged + missing === 0) {
+        if (result === "passed_with_reservations" && damaged + missing === 0 && !(data.inspectionNotes ?? originalDoc?.inspectionNotes)) {
           throw new Error("Indiquez au moins une réserve réelle ou choisissez « Conforme ».");
         }
         return data;
