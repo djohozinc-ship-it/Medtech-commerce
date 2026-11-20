@@ -104,13 +104,33 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
       });
     }
 
+    if (sourcingRequest.status === "converting_to_order") {
+      const existingOrder = await req.payload.find({
+        collection: "orders",
+        where: { sourcingRequest: { equals: requestId } },
+        limit: 1,
+        overrideAccess: true,
+      });
+      if (existingOrder.docs[0]) {
+        await req.payload.update({
+          collection: "sourcing-requests",
+          id: requestId,
+          overrideAccess: true,
+          context: { sourcingWorkflow: true },
+          data: { status: "converted_to_order", convertedOrder: existingOrder.docs[0].id },
+        });
+        return Response.json({ status: "converted_to_order", orderId: existingOrder.docs[0].id }, { status: 201 });
+      }
+      return Response.json({ message: "La conversion de ce devis est déjà en cours. Réessaie dans quelques instants." }, { status: 409 });
+    }
+
     if (sourcingRequest.status !== "quote_sent") {
       return Response.json({ message: "Ce devis n'est plus disponible pour réponse." }, { status: 409 });
     }
 
-    const expiry = sourcingRequest.quoteValidUntil
-      ? new Date(sourcingRequest.quoteValidUntil).getTime()
-      : undefined;
+    const expiryDate = sourcingRequest.quoteValidUntil ? new Date(sourcingRequest.quoteValidUntil) : undefined;
+    if (expiryDate) expiryDate.setUTCHours(23, 59, 59, 999);
+    const expiry = expiryDate?.getTime();
     if (expiry && (!Number.isFinite(expiry) || expiry < Date.now())) {
       await req.payload.update({
         collection: "sourcing-requests",
@@ -149,21 +169,46 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
     }
 
     // Claim the quote before creating the order to block concurrent double acceptance.
-    await req.payload.update({
+    const claim = await req.payload.update({
       collection: "sourcing-requests",
-      id: requestId,
+      where: {
+        and: [
+          { id: { equals: requestId } },
+          { status: { equals: "quote_sent" } },
+        ],
+      },
       overrideAccess: true,
       context: { sourcingWorkflow: true },
       data: { status: "converting_to_order", acceptedAt: new Date().toISOString() },
     });
+    if (!claim.docs.length) {
+      return Response.json({ message: "Ce devis vient d'être traité. Actualise la page." }, { status: 409 });
+    }
 
     try {
+      const existingOrder = await req.payload.find({
+        collection: "orders",
+        where: { sourcingRequest: { equals: requestId } },
+        limit: 1,
+        overrideAccess: true,
+      });
+      if (existingOrder.docs[0]) {
+        await req.payload.update({
+          collection: "sourcing-requests",
+          id: requestId,
+          overrideAccess: true,
+          context: { sourcingWorkflow: true },
+          data: { status: "converted_to_order", convertedOrder: existingOrder.docs[0].id },
+        });
+        return Response.json({ status: "converted_to_order", orderId: existingOrder.docs[0].id }, { status: 201 });
+      }
       const unitPrice = amount / quantity;
       const order = await req.payload.create({
         collection: "orders",
         overrideAccess: true,
         data: {
           customer: String(req.user.id),
+          sourcingRequest: requestId,
           date: new Date().toISOString(),
           products: [{
             productName: String(sourcingRequest.productName),
