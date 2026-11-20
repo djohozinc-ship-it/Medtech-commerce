@@ -1,14 +1,15 @@
 import type { CollectionConfig } from "payload";
 
-import { authenticated } from "@/access/authenticated";
 import { sendEmail } from "@/utilities/nodemailer";
 import { getMySourcingRequests, respondToSourcingQuote } from "@/endpoints/sourcing/requests";
 
 /**
- * Demandes de sourcing pour les produits absents du catalogue.
- * Les visiteurs peuvent déposer une demande; seules les personnes
- * connectées à l'administration peuvent consulter et traiter les dossiers.
+ * Sourcing requests are public to submit, but private to administrators.
+ * Customers access their own records through the /mine endpoint.
  */
+const administratorsOnly = ({ req }: { req: { user?: { collection?: string } | null } }) =>
+  req.user?.collection === "administrators";
+
 export const SourcingRequests: CollectionConfig = {
   slug: "sourcing-requests",
   labels: {
@@ -17,9 +18,9 @@ export const SourcingRequests: CollectionConfig = {
   },
   access: {
     create: () => true,
-    read: authenticated,
-    update: authenticated,
-    delete: authenticated,
+    read: administratorsOnly,
+    update: administratorsOnly,
+    delete: administratorsOnly,
   },
   endpoints: [
     { path: "/mine", method: "get", handler: getMySourcingRequests },
