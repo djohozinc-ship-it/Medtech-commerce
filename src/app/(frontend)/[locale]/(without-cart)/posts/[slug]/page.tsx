@@ -8,36 +8,16 @@ import { PayloadRedirects } from "@/components/PayloadRedirects";
 import RichText from "@/components/RichText";
 import { PostHero } from "@/components/heros/PostHero";
 import { type Locale } from "@/i18n/config";
-import { routing } from "@/i18n/routing";
 import { generateMeta } from "@/utilities/generateMeta";
 import config from "@payload-config";
+
+export const dynamic = "force-dynamic";
 
 import PageClient from "./page.client";
 
 import type { Post } from "@/payload-types";
 import type { Metadata } from "next";
 
-export async function generateStaticParams() {
-  const payload = await getPayload({ config });
-  const posts = await payload.find({
-    collection: "posts",
-    draft: false,
-    limit: 1000,
-    overrideAccess: false,
-    pagination: false,
-    select: {
-      slug: true,
-    },
-  });
-
-  const params = routing.locales.flatMap((locale) => {
-    return posts.docs.map(({ slug }) => {
-      return { locale, slug };
-    });
-  });
-
-  return params;
-}
 
 type Args = {
   params: Promise<{
