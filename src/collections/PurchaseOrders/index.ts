@@ -1,4 +1,5 @@
 import { type Access, type CollectionConfig } from "payload";
+
 import { sendEmail } from "@/utilities/nodemailer";
 
 const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
@@ -241,7 +242,7 @@ export const PurchaseOrders: CollectionConfig = {
           if (sourcingRequestId && String(offerRequestId ?? "") !== String(sourcingRequestId)) {
             throw new Error("L'offre fournisseur doit être rattachée à la même demande client que le bon de commande.");
           }
-          if (!offer || offer.quoteStatus !== "approved") {
+          if (offer?.quoteStatus !== "approved") {
             throw new Error("Le bon de commande ne peut utiliser qu'une offre fournisseur validée.");
           }
           if (offer.validUntil) {
@@ -265,7 +266,7 @@ export const PurchaseOrders: CollectionConfig = {
 
         const existingItems = Array.isArray(originalDoc?.items) ? originalDoc.items : [];
         const items = Array.isArray(data.items) ? data.items : existingItems;
-        for (const line of items as Array<Record<string, unknown>>) {
+        for (const line of items as Record<string, unknown>[]) {
           const lineOfferValue = line.supplierOffer;
           const lineOfferId = typeof lineOfferValue === "string" || typeof lineOfferValue === "number"
             ? lineOfferValue
@@ -275,7 +276,7 @@ export const PurchaseOrders: CollectionConfig = {
               : undefined;
           if (lineOfferId === undefined || lineOfferId === null || lineOfferId === "") continue;
           const lineOffer = await (req.payload).findByID({ collection: "supplier-offers", id: lineOfferId, depth: 0, overrideAccess: true });
-          if (!lineOffer || lineOffer.quoteStatus !== "approved") throw new Error("Chaque offre associée à une ligne d'achat doit être validée.");
+          if (lineOffer?.quoteStatus !== "approved") throw new Error("Chaque offre associée à une ligne d'achat doit être validée.");
           const supplierValue = data.supplier ?? originalDoc?.supplier;
           const supplierId = typeof supplierValue === "object" && supplierValue ? (supplierValue as { id?: string | number }).id : supplierValue;
           const lineSupplierId = typeof lineOffer.supplier === "object" && lineOffer.supplier ? lineOffer.supplier.id : lineOffer.supplier;
@@ -308,7 +309,7 @@ export const PurchaseOrders: CollectionConfig = {
           if (!supplierId) throw new Error("Un fournisseur doit être sélectionné avant validation du bon.");
           const payload = req.payload;
           const supplier = await payload.findByID({ collection: "suppliers", id: supplierId, depth: 0, overrideAccess: true });
-          if (!supplier || supplier.verificationStatus !== "verified") {
+          if (supplier?.verificationStatus !== "verified") {
             throw new Error("Le fournisseur doit être vérifié avant la validation du bon de commande.");
           }
           if (!offerId) throw new Error("Sélectionnez une offre fournisseur validée avant d'approuver le bon de commande.");

@@ -1,8 +1,8 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type FinanceSummary = {
   currency: "XOF";

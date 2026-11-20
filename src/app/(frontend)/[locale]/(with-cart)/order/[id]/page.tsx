@@ -2,18 +2,18 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getPayload } from "payload";
 
-import { Media as MediaComponent } from "@/components/Media";
 import { CustomerOrderPaymentPanel } from "@/components/(ecommerce)/CustomerOrderPaymentPanel";
 import { CustomerShipmentTracking } from "@/components/(ecommerce)/CustomerShipmentTracking";
+import { Media as MediaComponent } from "@/components/Media";
 import RichText from "@/components/RichText";
 import { type Locale } from "@/i18n/config";
 import { Link } from "@/i18n/routing";
 import { type Media } from "@/payload-types";
 import config from "@/payload.config";
 import { formatPrice } from "@/utilities/formatPrices";
+import { getCustomer } from "@/utilities/getCustomer";
 import { getCachedGlobal } from "@/utilities/getGlobals";
 import { getOrderProducts } from "@/utilities/getOrderProducts";
-import { getCustomer } from "@/utilities/getCustomer";
 
 const OrdersPage = async ({ params }: { params: Promise<{ locale: Locale; id: string }> }) => {
   const { locale, id } = await params;

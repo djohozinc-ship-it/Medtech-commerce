@@ -25,11 +25,11 @@ import { type ShopSetting } from "@/payload-types";
 import { type Currency } from "@/stores/Currency/types";
 import { formatPrice } from "@/utilities/formatPrices";
 
+import { FinanceOperationsPanel } from "../../FinanceOperationsPanel";
+import { FinanceSummaryPanel } from "../../FinanceSummaryPanel";
 import { OverviewCard } from "../../OverviewCard";
 import { OverviewChart } from "../../OverviewChart";
 import { OverviewLastOrders } from "../../OverviewLastOrders";
-import { FinanceSummaryPanel } from "../../FinanceSummaryPanel";
-import { FinanceOperationsPanel } from "../../FinanceOperationsPanel";
 
 export const Overview = () => {
   const [totalRevenue, setTotalRevenue] = useState<{ value: number; percentage: number }>({

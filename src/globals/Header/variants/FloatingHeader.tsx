@@ -1,10 +1,10 @@
 "use client";
-import { Link } from "@/i18n/routing";
 import { useEffect, useState } from "react";
 
 import { CMSLink } from "@/components/Link";
 import { Logo } from "@/components/Logo/Logo";
 import { Media } from "@/components/Media";
+import { Link } from "@/i18n/routing";
 import { cn } from "@/utilities/cn";
 
 import type { Header } from "@/payload-types";

@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { type ReactNode } from "react";
+
 import { Overview } from "./Overview";
 
 type AdminShortcut = { slug: string; label: string; description: string };

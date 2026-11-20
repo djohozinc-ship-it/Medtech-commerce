@@ -91,7 +91,7 @@ export const SupplierOffers: CollectionConfig = {
         if (status === "approved") {
           if (!supplierId) throw new Error("Sélectionnez un fournisseur avant de valider son offre.");
           const supplier = await (req.payload as any).findByID({ collection: "suppliers", id: supplierId, depth: 0, overrideAccess: true });
-          if (!supplier || supplier.verificationStatus !== "verified") throw new Error("Le fournisseur doit être vérifié avant de valider son offre commerciale.");
+          if (supplier?.verificationStatus !== "verified") throw new Error("Le fournisseur doit être vérifié avant de valider son offre commerciale.");
           if (validity) {
             const validUntilTime = new Date(validity).getTime();
             if (!Number.isFinite(validUntilTime) || validUntilTime < Date.now()) throw new Error("Cette offre fournisseur est expirée ou sa date de validité est incorrecte.");

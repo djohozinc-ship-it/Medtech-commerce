@@ -1,8 +1,9 @@
 import { setRequestLocale } from "next-intl/server";
+
 import { type Locale } from "@/i18n/config";
+import { Link } from "@/i18n/routing";
 import { type Customer } from "@/payload-types";
 import { getCustomer } from "@/utilities/getCustomer";
-import { Link } from "@/i18n/routing";
 
 export const dynamic = "force-dynamic";
 

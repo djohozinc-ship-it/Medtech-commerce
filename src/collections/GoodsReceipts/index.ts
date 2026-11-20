@@ -168,7 +168,7 @@ export const GoodsReceipts: CollectionConfig = {
           const inspection = await payload.findByID({ collection: "warehouse-inspections", id: inspectionId, depth: 0, overrideAccess: true });
           const expectedResult = receiptStatus === "accepted" ? "passed"
             : receiptStatus === "accepted_with_reservations" ? "passed_with_reservations" : "failed";
-          if (!inspection || inspection.result !== expectedResult) {
+          if (inspection?.result !== expectedResult) {
             throw new Error("Le résultat de la réception doit correspondre au résultat de la fiche de contrôle qualité.");
           }
         }
@@ -187,7 +187,7 @@ export const GoodsReceipts: CollectionConfig = {
             previouslyAccepted.set(key, (previouslyAccepted.get(key) ?? 0) + Number(line.quantityReceived ?? 0));
           }
         }
-        for (const item of (Array.isArray(data.items) ? data.items : (originalDoc?.items ?? [])) as Array<Record<string, unknown>>) {
+        for (const item of (Array.isArray(data.items) ? data.items : (originalDoc?.items ?? [])) as Record<string, unknown>[]) {
           const expected = Number(item.quantityExpected);
           const received = Number(item.quantityReceived);
           const damaged = Number(item.damagedQuantity ?? 0);

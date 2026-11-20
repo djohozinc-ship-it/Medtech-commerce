@@ -18,7 +18,7 @@ export const FedaPayPaymentButton = ({ orderId, currency }: { orderId: string; c
         { orderId },
         { withCredentials: true },
       );
-      if (!data.paymentUrl || !data.paymentUrl.startsWith("https://")) {
+      if (!data.paymentUrl?.startsWith("https://")) {
         throw new Error("Lien de paiement invalide");
       }
       window.location.assign(data.paymentUrl);

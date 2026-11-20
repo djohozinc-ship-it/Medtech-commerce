@@ -43,7 +43,7 @@ export function SourcingRequestForm() {
     }
 
     try {
-      const attachmentIds: Array<{ file: string; description: string }> = [];
+      const attachmentIds: { file: string; description: string }[] = [];
       if (files.length) {
         setState("uploading");
         for (const file of files) {

@@ -1,7 +1,8 @@
+import { getMySourcingRequests, respondToSourcingQuote } from "@/endpoints/sourcing/requests";
+import { sendEmail } from "@/utilities/nodemailer";
+
 import type { Access, CollectionConfig } from "payload";
 
-import { sendEmail } from "@/utilities/nodemailer";
-import { getMySourcingRequests, respondToSourcingQuote } from "@/endpoints/sourcing/requests";
 
 /**
  * Sourcing requests are public to submit, but private to administrators.
