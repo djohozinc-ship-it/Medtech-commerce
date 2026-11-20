@@ -140,7 +140,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
       return Response.json({ message: "Ce devis n'est plus disponible pour réponse." }, { status: 409 });
     }
 
-    const expiryDate = sourcingRequest.quoteValidUntil ? new Date(sourcingRequest.quoteValidUntil) : undefined;
+    const expiryDate = sourcingRequest.quoteValidUntil ? new Date(String(sourcingRequest.quoteValidUntil)) : undefined;
     if (expiryDate) expiryDate.setUTCHours(23, 59, 59, 999);
     const expiry = expiryDate?.getTime() ?? Number.NaN;
     if (expiryDate && (!Number.isFinite(expiry) || expiry < Date.now())) {
