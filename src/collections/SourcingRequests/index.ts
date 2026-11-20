@@ -274,6 +274,28 @@ export const SourcingRequests: CollectionConfig = {
     },
   ],
   hooks: {
+    beforeChange: [
+      ({ data, operation }) => {
+        if (operation !== "create" || !data) return data;
+        const reference = `SRC-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+        return {
+          ...data,
+          requestReference: reference,
+          status: "received",
+          convertedOrder: null,
+          acceptedAt: null,
+          declinedAt: null,
+          quotedAmount: null,
+          quotedCurrency: "XOF",
+          quotedShippingCost: 0,
+          quotedTotal: null,
+          depositPercentage: null,
+          quoteValidUntil: null,
+          quoteConditions: null,
+          internalNotes: null,
+        };
+      },
+    ],
     afterChange: [
       async ({ doc, previousDoc, req }) => {
         const current = doc as unknown as Record<string, unknown>;
