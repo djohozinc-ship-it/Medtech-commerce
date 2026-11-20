@@ -598,6 +598,37 @@ export const Products: CollectionConfig = {
               label: { en: "Technical specifications / compatibility", fr: "Caractéristiques techniques / compatibilité", pl: "Specyfikacja techniczna / kompatybilność" },
             },
             {
+              name: "technicalSpecs",
+              type: "array",
+              label: { en: "Structured technical specifications", fr: "Caractéristiques techniques détaillées", pl: "Szczegółowa specyfikacja techniczna" },
+              labels: {
+                singular: { en: "Specification", fr: "Caractéristique", pl: "Specyfikacja" },
+                plural: { en: "Specifications", fr: "Caractéristiques", pl: "Specyfikacje" },
+              },
+              admin: {
+                description: {
+                  en: "Add one measurable or verifiable specification per row (e.g. measurement range, accuracy, power supply).",
+                  fr: "Ajouter une caractéristique mesurable ou vérifiable par ligne (ex. plage de mesure, précision, alimentation).",
+                  pl: "Dodaj jedną mierzalną lub możliwą do sprawdzenia cechę w każdym wierszu.",
+                },
+                initCollapsed: true,
+              },
+              fields: [
+                {
+                  name: "label",
+                  type: "text",
+                  required: true,
+                  label: { en: "Specification", fr: "Caractéristique", pl: "Specyfikacja" },
+                },
+                {
+                  name: "value",
+                  type: "text",
+                  required: true,
+                  label: { en: "Value", fr: "Valeur", pl: "Wartość" },
+                },
+              ],
+            },
+            {
               name: "regulatoryDocuments",
               type: "relationship",
               relationTo: "media",
