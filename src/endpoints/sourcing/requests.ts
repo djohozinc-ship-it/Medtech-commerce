@@ -32,7 +32,12 @@ export const getMySourcingRequests = async (req: PayloadRequest) => {
       pagination: false,
       sort: "-createdAt",
       limit: 100,
-      where: { customerEmail: { equals: req.user.email.toLowerCase() } },
+      where: {
+        or: [
+          { customerEmail: { equals: req.user.email } },
+          { customerEmail: { equals: req.user.email.toLowerCase() } },
+        ],
+      },
       select: {
         id: true,
         requestReference: true,
