@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { getPayload } from "payload";
 
 import { Media as MediaComponent } from "@/components/Media";
-import { FedaPayPaymentButton } from "@/components/(ecommerce)/FedaPayPaymentButton";
+import { CustomerOrderPaymentPanel } from "@/components/(ecommerce)/CustomerOrderPaymentPanel";
 import RichText from "@/components/RichText";
 import { type Locale } from "@/i18n/config";
 import { Link } from "@/i18n/routing";
@@ -187,17 +187,9 @@ const OrdersPage = async ({ params }: { params: Promise<{ locale: Locale; id: st
                   {formatPrice(order.orderDetails.totalWithShipping, order.orderDetails.currency, locale)}
                 </dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="font-medium text-gray-900">Montant déjà payé</dt>
-                <dd className="text-gray-700">{formatPrice(order.orderDetails.amountPaid ?? 0, order.orderDetails.currency, locale)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="font-medium text-gray-900">Solde restant (calcul indicatif)</dt>
-                <dd className="text-gray-900">{formatPrice(Math.max(0, order.orderDetails.totalWithShipping - (order.orderDetails.amountPaid ?? 0)), order.orderDetails.currency, locale)}</dd>
-              </div>
             </dl>
             {customer && orderCustomerId && (
-              <FedaPayPaymentButton orderId={String(order.id)} currency={order.orderDetails.currency} />
+              <CustomerOrderPaymentPanel orderId={String(order.id)} />
             )}
           </div>
         </div>
