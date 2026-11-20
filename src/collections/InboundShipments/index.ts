@@ -88,6 +88,9 @@ export const InboundShipments: CollectionConfig = {
           }
         }
         const status = data.status ?? originalDoc?.status;
+        if (["shipped", "in_transit"].includes(String(status)) && (data.shippingMode ?? originalDoc?.shippingMode) === "pending") {
+          throw new Error("Sélectionnez le mode de transport réel avant l'expédition.");
+        }
         if (["shipped", "in_transit"].includes(String(status)) && !(data.departureDate ?? originalDoc?.departureDate)) {
           throw new Error("Renseignez la date réelle de départ avant de marquer l'expédition comme expédiée.");
         }
@@ -96,6 +99,9 @@ export const InboundShipments: CollectionConfig = {
         }
         if (status === "closed" && !(data.customsReference ?? originalDoc?.customsReference)) {
           throw new Error("Le dossier douanier doit être renseigné avant la clôture.");
+        }
+        if (status === "closed" && !(data.customsDeclaration ?? originalDoc?.customsDeclaration)) {
+          throw new Error("Joignez la déclaration douanière avant de clôturer l'expédition.");
         }
         if (status === "exception" && !(data.exceptionNotes ?? originalDoc?.exceptionNotes)) {
           throw new Error("Décrivez l'incident avant de placer l'expédition en anomalie.");
@@ -111,8 +117,11 @@ export const InboundShipments: CollectionConfig = {
             payload.findByID({ collection: "warehouses", id: destinationId, depth: 0, overrideAccess: true }),
           ]);
           if (String(originId) === String(destinationId)) throw new Error("L'entrepôt de départ et celui d'arrivée doivent être différents.");
-          if (origin?.warehouseType === "benin_destination" && destination?.warehouseType === "china_origin") {
-            throw new Error("Le sens du trajet est inversé : l'expédition internationale doit partir de Chine vers le Bénin.");
+          if (origin?.warehouseType === "benin_destination" && destination?.warehouseType !== "benin_destination") {
+            throw new Error("L'entrepôt de départ ne peut pas être le site de destination au Bénin pour une importation depuis la Chine.");
+          }
+          if (destination?.warehouseType === "china_origin" && origin?.warehouseType !== "china_origin") {
+            throw new Error("L'entrepôt de destination ne peut pas être le site d'origine en Chine pour une importation vers le Bénin.");
           }
         }
         return data;
