@@ -176,7 +176,7 @@ export const GoodsReceipts: CollectionConfig = {
           const missing = Number(item.missingQuantity ?? 0);
           const lineId = String(item.purchaseOrderItemID ?? "");
           const orderedLine = orderLines.get(lineId);
-          if (![expected, received, damaged, missing].every(Number.isFinite) || expected < 0 || received < 0 || damaged < 0 || missing < 0 || damaged > received || damaged + missing > expected) {
+          if (![expected, received, damaged, missing].every(Number.isFinite) || [expected, received, damaged, missing].some((value) => !Number.isInteger(value) || value < 0) || damaged > received || damaged + missing > expected) {
             throw new Error("Vérifiez les quantités attendues, reçues, endommagées et manquantes.");
           }
           if (!orderedLine) throw new Error("Une ligne de réception ne correspond pas à une ligne de ce bon de commande.");
