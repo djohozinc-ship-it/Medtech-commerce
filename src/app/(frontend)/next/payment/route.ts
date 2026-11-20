@@ -178,7 +178,7 @@ export async function POST(req: Request) {
           country:
             checkoutData.individualInvoice && checkoutData.invoice
               ? (checkoutData.invoice.country as Country)
-              : (checkoutData.shipping.country as Country),
+              : checkoutData.shipping.country,
           isCompany: checkoutData.buyerType === "company",
           name:
             checkoutData.individualInvoice && checkoutData.invoice
