@@ -139,6 +139,24 @@ export const GoodsReceipts: CollectionConfig = {
         const payload = req.payload as any;
         const po = await payload.findByID({ collection: "purchase-orders", id: purchaseOrderId, depth: 0, overrideAccess: true });
         if (!po || !Array.isArray(po.items)) throw new Error("Bon de commande introuvable ou sans lignes.");
+        const inboundShipmentValue = data.inboundShipment ?? originalDoc?.inboundShipment;
+        const inboundShipmentId = typeof inboundShipmentValue === "object" && inboundShipmentValue ? inboundShipmentValue.id : inboundShipmentValue;
+        if (inboundShipmentId) {
+          const shipment = await payload.findByID({ collection: "inbound-shipments", id: inboundShipmentId, depth: 0, overrideAccess: true });
+          if (!shipment) throw new Error("L'expédition internationale liée à cette réception est introuvable.");
+          const linkedPurchaseOrderIds = (Array.isArray(shipment.purchaseOrders) ? shipment.purchaseOrders : []).map((value: unknown) =>
+            String(typeof value === "object" && value ? (value as { id?: string | number }).id ?? "" : value ?? ""),
+          );
+          if (!linkedPurchaseOrderIds.includes(String(purchaseOrderId))) {
+            throw new Error("Le bon de commande fournisseur de cette réception doit être rattaché à l'expédition internationale.");
+          }
+          const receiptWarehouseValue = data.warehouse ?? originalDoc?.warehouse;
+          const receiptWarehouseId = typeof receiptWarehouseValue === "object" && receiptWarehouseValue ? receiptWarehouseValue.id : receiptWarehouseValue;
+          const originWarehouseId = typeof shipment.originWarehouse === "object" && shipment.originWarehouse ? shipment.originWarehouse.id : shipment.originWarehouse;
+          if (String(receiptWarehouseId ?? "") !== String(originWarehouseId ?? "")) {
+            throw new Error("La réception fournisseur liée à l'expédition doit être enregistrée dans son entrepôt d'origine en Chine.");
+          }
+        }
         if (!["acknowledged", "partially_received"].includes(String(po.status)) && !originalDoc) {
           throw new Error("Le fournisseur doit avoir confirmé le bon de commande avant toute réception.");
         }
