@@ -16,7 +16,7 @@ const administratorsOnly: Access = ({ req }) => req.user?.collection === "admini
 export const Customers: CollectionConfig = {
   slug: "customers",
   access: {
-    admin: administratorsOnly,
+    admin: ({ req }) => req.user?.collection === "administrators",
     create: () => true,
     read: customerOrAdministrator,
     update: customerOrAdministrator,
