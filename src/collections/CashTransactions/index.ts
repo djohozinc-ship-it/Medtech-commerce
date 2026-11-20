@@ -141,6 +141,16 @@ export const CashTransactions: CollectionConfig = {
             depth: 0,
             overrideAccess: true,
           });
+          const paymentSupplierValue = data.supplier ?? originalDoc?.supplier;
+          const paymentSupplierId = typeof paymentSupplierValue === "object" && paymentSupplierValue ? paymentSupplierValue.id : paymentSupplierValue;
+          const orderSupplierId = typeof purchaseOrder.supplier === "object" && purchaseOrder.supplier ? purchaseOrder.supplier.id : purchaseOrder.supplier;
+          if (paymentSupplierId && String(paymentSupplierId) !== String(orderSupplierId)) {
+            throw new Error("Le fournisseur du paiement ne correspond pas au fournisseur du bon de commande.");
+          }
+          data.supplier = orderSupplierId;
+          if (!["approved", "sent_to_supplier", "acknowledged", "partially_received", "received"].includes(String(purchaseOrder.status))) {
+            throw new Error("Le bon de commande doit être approuvé avant d'enregistrer un paiement fournisseur.");
+          }
           const paymentCurrency = data.currency ?? originalDoc?.currency;
           const amount = Number(data.amount ?? originalDoc?.amount);
           const suppliedRate = Number(data.purchaseOrderExchangeRate ?? originalDoc?.purchaseOrderExchangeRate);
