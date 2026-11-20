@@ -62,8 +62,8 @@ export function CustomerSourcingRequests() {
       if (!response.ok) throw new Error(apiMessage);
       const docs = typeof result === "object" && result !== null && "docs" in result ? result.docs : [];
       setRequests(Array.isArray(docs) ? docs.filter((item): item is SourcingRequest =>
-        typeof item === "object" && item !== null && "id" in item &&
-        (typeof item.id === "string" || typeof item.id === "number")
+        typeof item === "object" && item !== null &&
+        ("id" in item) && (typeof (item as { id?: unknown }).id === "string" || typeof (item as { id?: unknown }).id === "number")
       ) : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue.");
@@ -123,7 +123,7 @@ export function CustomerSourcingRequests() {
       {loading ? <p className="text-sm text-gray-600">Chargement des demandes...</p> :
         requests.length === 0 ? (
           <div className="rounded-xl border border-dashed p-8 text-center">
-            <p className="font-medium text-gray-800">Tu n'as pas encore de demande de devis.</p>
+            <p className="font-medium text-gray-800">Tu n&apos;as pas encore de demande de devis.</p>
             <p className="mt-1 text-sm text-gray-600">Envoie une demande pour un équipement ou une pièce qui n'est pas au catalogue.</p>
           </div>
         ) : (
@@ -138,13 +138,13 @@ export function CustomerSourcingRequests() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{request.requestReference || "Demande"}</p>
-                      <h2 className="mt-1 text-lg font-semibold text-gray-900">{request.productName}</h2>
+                      <h2 className="mt-1 text-lg font-semibold text-gray-900">{request.productName ?? "Produit"}</h2>
                       <p className="mt-1 text-sm text-gray-600">
                         {request.brand ? `${request.brand} · ` : ""}{request.model ? `${request.model} · ` : ""}{request.quantity ?? 1} unité(s) · {request.destinationCity}
                       </p>
                     </div>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                      {statusLabels[request.status || ""] || request.status || "En traitement"}
+                      {statusLabels[request.status ?? ""] || request.status ?? "En traitement"}
                     </span>
                   </div>
 
@@ -152,14 +152,14 @@ export function CustomerSourcingRequests() {
                     <div className="mt-5 rounded-lg bg-blue-50 p-4">
                       <h3 className="font-semibold text-gray-900">Devis proposé</h3>
                       <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-                        <p>Produits : <strong>{money(Number(request.quotedAmount || 0), currency)}</strong></p>
-                        <p>Transport : <strong>{money(Number(request.quotedShippingCost || 0), currency)}</strong></p>
-                        <p className="sm:col-span-2 text-base">Total : <strong>{money(Number(request.quotedTotal ?? (Number(request.quotedAmount || 0) + Number(request.quotedShippingCost || 0))), currency)}</strong></p>
+                        <p>Produits : <strong>{money(Number(request.quotedAmount ?? 0), currency)}</strong></p>
+                        <p>Transport : <strong>{money(Number(request.quotedShippingCost ?? 0), currency)}</strong></p>
+                        <p className="sm:col-span-2 text-base">Total : <strong>{money(Number(request.quotedTotal ?? (Number(request.quotedAmount ?? 0) + Number(request.quotedShippingCost ?? 0))), currency)}</strong></p>
                         {request.depositPercentage != null && <p>Acompte demandé : <strong>{request.depositPercentage}%</strong></p>}
-                        {request.quoteValidUntil && <p>Valable jusqu'au : <strong>{new Date(request.quoteValidUntil).toLocaleDateString("fr-FR")}</strong></p>}
+                        {request.quoteValidUntil && <p>Valable jusqu&apos;au : <strong>{new Date(request.quoteValidUntil).toLocaleDateString("fr-FR")}</strong></p>}
                       </div>
                       {request.quoteConditions && <p className="mt-3 whitespace-pre-line text-sm text-gray-700">{request.quoteConditions}</p>}
-                      <p className="mt-3 text-xs text-gray-600">L'acceptation crée une commande avec le montant du devis. Le paiement sera traité ensuite selon les moyens disponibles.</p>
+                      <p className="mt-3 text-xs text-gray-600">L&apos;acceptation crée une commande avec le montant du devis. Le paiement sera traité ensuite selon les moyens disponibles.</p>
                       <div className="mt-4 flex flex-wrap gap-2">
                         <button type="button" disabled={busyId === id} onClick={() => void respond(id, "accept")} className="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
                           {busyId === id ? "Traitement..." : "Accepter le devis"}
