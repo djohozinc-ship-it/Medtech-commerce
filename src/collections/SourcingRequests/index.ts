@@ -21,6 +21,10 @@ export const SourcingRequests: CollectionConfig = {
     update: authenticated,
     delete: authenticated,
   },
+  endpoints: [
+    { path: "/mine", method: "get", handler: getMySourcingRequests },
+    { path: "/respond", method: "post", handler: respondToSourcingQuote },
+  ],
   admin: {
     useAsTitle: "productName",
     defaultColumns: ["productName", "customerName", "quantity", "status", "createdAt"],
