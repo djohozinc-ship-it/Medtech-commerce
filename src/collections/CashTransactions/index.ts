@@ -86,8 +86,6 @@ export const CashTransactions: CollectionConfig = {
     { name: "supplier", type: "relationship", relationTo: "suppliers", label: "Fournisseur concerné" },
     { name: "purchaseOrder", type: "relationship", relationTo: "purchase-orders", label: "Bon de commande fournisseur concerné" },
     { name: "purchasePaymentStage", type: "select", options: [{ label: "Acompte", value: "deposit" }, { label: "Paiement intermédiaire", value: "installment" }, { label: "Solde", value: "balance" }, { label: "Paiement intégral", value: "full" }], label: "Étape du paiement fournisseur" },
-    { name: "exchangeRateToPurchaseCurrency", type: "number", min: 0.000001, label: "Taux vers la devise du bon de commande" },
-    { name: "amountInPurchaseCurrency", type: "number", admin: { readOnly: true }, label: "Montant converti dans la devise du bon" },
     { name: "purchaseOrderExchangeRate", type: "number", min: 0.000001, label: "Taux vers la devise du bon de commande" },
     { name: "amountInPurchaseOrderCurrency", type: "number", admin: { readOnly: true }, label: "Montant converti dans la devise du bon" },
     { name: "supplierOffer", type: "relationship", relationTo: "supplier-offers", label: "Offre fournisseur concernée" },
@@ -125,6 +123,7 @@ export const CashTransactions: CollectionConfig = {
         const transactionType = data.transactionType ?? originalDoc?.transactionType;
         const purchaseOrderValue = data.purchaseOrder ?? originalDoc?.purchaseOrder;
         const purchaseOrderId = typeof purchaseOrderValue === "object" ? purchaseOrderValue?.id : purchaseOrderValue;
+        if (transactionType === "supplier_payment" && !purchaseOrderId) throw new Error("Un paiement fournisseur doit être lié à un bon de commande.");
         if (transactionType === "supplier_payment" && purchaseOrderId) {
           const payload = req.payload as any;
           const purchaseOrder = await payload.findByID({
@@ -142,6 +141,23 @@ export const CashTransactions: CollectionConfig = {
           }
           data.purchaseOrderExchangeRate = rate;
           data.amountInPurchaseOrderCurrency = Math.round(amount * rate * 100) / 100;
+          if ((data.status ?? originalDoc?.status) === "confirmed") {
+            const existing = await payload.find({
+              collection: "cash-transactions",
+              where: { and: [
+                { purchaseOrder: { equals: purchaseOrderId } },
+                { transactionType: { equals: "supplier_payment" } },
+                { status: { equals: "confirmed" } },
+              ] },
+              limit: 10000, depth: 0, overrideAccess: true,
+            });
+            const currentId = originalDoc?.id ? String(originalDoc.id) : "";
+            const alreadyPaid = existing.docs.reduce((sum: number, item: Record<string, unknown>) =>
+              String(item.id) === currentId ? sum : sum + Number(item.amountInPurchaseOrderCurrency ?? 0), 0);
+            if (alreadyPaid + Number(data.amountInPurchaseOrderCurrency) > Number(purchaseOrder.totalAmount ?? 0) + 0.01) {
+              throw new Error("Ce paiement dépasserait le montant total du bon de commande. Vérifiez les paiements déjà confirmés.");
+            }
+          }
         } else {
           delete data.amountInPurchaseOrderCurrency;
         }
@@ -184,6 +200,7 @@ export const CashTransactions: CollectionConfig = {
             data: {
               amountPaid: Math.round(paid * 100) / 100,
               balanceDue: Math.max(0, Math.round((total - paid) * 100) / 100),
+              paymentStatus: paid <= 0 ? "unpaid" : paid + 0.01 >= total ? "paid" : "partially_paid",
             },
           });
         }
