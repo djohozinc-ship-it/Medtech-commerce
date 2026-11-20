@@ -104,7 +104,7 @@ export default buildConfig({
   },
   i18n: {
     supportedLanguages: { fr, en, pl },
-    fallbackLanguage: "fr",
+    fallbackLanguage: "en",
     translations: customTranslationsObject,
   },
   localization: {
