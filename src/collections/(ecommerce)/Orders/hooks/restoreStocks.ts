@@ -14,6 +14,7 @@ export const restoreStocks: FieldHook<Order, Order["orderDetails"]["status"] | u
     !value ||
     value !== "cancelled" ||
     !originalDoc.products ||
+    originalDoc.orderDetails?.status === "cancelled" ||
     !originalDoc.extractedFromStock
   ) return value;
 
