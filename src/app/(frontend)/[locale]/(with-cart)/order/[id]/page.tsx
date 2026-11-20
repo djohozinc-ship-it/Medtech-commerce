@@ -4,6 +4,7 @@ import { getPayload } from "payload";
 
 import { Media as MediaComponent } from "@/components/Media";
 import { CustomerOrderPaymentPanel } from "@/components/(ecommerce)/CustomerOrderPaymentPanel";
+import { CustomerShipmentTracking } from "@/components/(ecommerce)/CustomerShipmentTracking";
 import RichText from "@/components/RichText";
 import { type Locale } from "@/i18n/config";
 import { Link } from "@/i18n/routing";
@@ -189,7 +190,10 @@ const OrdersPage = async ({ params }: { params: Promise<{ locale: Locale; id: st
               </div>
             </dl>
             {customer && orderCustomerId && (
-              <CustomerOrderPaymentPanel orderId={String(order.id)} />
+              <>
+                <CustomerOrderPaymentPanel orderId={String(order.id)} />
+                <CustomerShipmentTracking orderId={String(order.id)} />
+              </>
             )}
           </div>
         </div>
