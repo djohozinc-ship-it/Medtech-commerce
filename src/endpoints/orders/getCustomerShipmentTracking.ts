@@ -63,6 +63,7 @@ export const getCustomerShipmentTracking = async (req: PayloadRequest) => {
         carrier: true,
         trackingCode: true,
         trackingUrl: true,
+        customerMessage: true,
       },
     });
 
