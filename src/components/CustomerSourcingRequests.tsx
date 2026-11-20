@@ -55,9 +55,16 @@ export function CustomerSourcingRequests() {
     setError("");
     try {
       const response = await fetch("/api/sourcing-requests/mine", { credentials: "same-origin", cache: "no-store" });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result?.message || "Impossible de charger tes demandes.");
-      setRequests(Array.isArray(result.docs) ? result.docs : []);
+      const result: unknown = await response.json();
+      const apiMessage = typeof result === "object" && result !== null && "message" in result && typeof result.message === "string"
+        ? result.message
+        : "Impossible de charger tes demandes.";
+      if (!response.ok) throw new Error(apiMessage);
+      const docs = typeof result === "object" && result !== null && "docs" in result ? result.docs : [];
+      setRequests(Array.isArray(docs) ? docs.filter((item): item is SourcingRequest =>
+        typeof item === "object" && item !== null && "id" in item &&
+        (typeof item.id === "string" || typeof item.id === "number")
+      ) : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue.");
     } finally {
