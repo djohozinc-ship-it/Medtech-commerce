@@ -1,7 +1,6 @@
 import { type Access, type CollectionConfig } from "payload";
 
 const customersOnly: Access = ({ req }) => req.user?.collection === "customers";
-const administratorsOnly: Access = ({ req }) => req.user?.collection === "administrators";
 const reviewOwnerOrAdministrator: Access = ({ req }) => {
   if (req.user?.collection === "administrators") return true;
   if (req.user?.collection === "customers") {
