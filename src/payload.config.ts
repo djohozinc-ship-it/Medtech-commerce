@@ -27,6 +27,8 @@ import { ShipmentEvents } from "./collections/ShipmentEvents";
 import { SourcingRequests } from "./collections/SourcingRequests";
 import { SourcingAttachments } from "./collections/SourcingAttachments";
 import { Suppliers } from "./collections/Suppliers";
+import { PurchaseOrders } from "./collections/PurchaseOrders";
+import { GoodsReceipts } from "./collections/GoodsReceipts";
 import { SupplierOffers } from "./collections/SupplierOffers";
 import { LandedCostEstimates } from "./collections/LandedCostEstimates";
 import { Warehouses } from "./collections/Warehouses";
@@ -143,6 +145,8 @@ export default buildConfig({
     SourcingAttachments,
     Suppliers,
     SupplierOffers,
+    PurchaseOrders,
+    GoodsReceipts,
     LandedCostEstimates,
     Warehouses,
     InboundShipments,
