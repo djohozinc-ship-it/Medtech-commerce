@@ -124,6 +124,15 @@ export const CashTransactions: CollectionConfig = {
         const purchaseOrderValue = data.purchaseOrder ?? originalDoc?.purchaseOrder;
         const purchaseOrderId = typeof purchaseOrderValue === "object" ? purchaseOrderValue?.id : purchaseOrderValue;
         if (transactionType === "supplier_payment" && !purchaseOrderId) throw new Error("Un paiement fournisseur doit être lié à un bon de commande.");
+        if (transactionType === "supplier_payment" && (data.status ?? originalDoc?.status) === "confirmed") {
+          const proof = data.proofDocuments ?? originalDoc?.proofDocuments;
+          const providerReference = data.providerTransactionId ?? originalDoc?.providerTransactionId;
+          const confirmedBy = data.confirmedBy ?? originalDoc?.confirmedBy;
+          if ((!Array.isArray(proof) || proof.length === 0) && !providerReference) {
+            throw new Error("Joignez un justificatif de paiement ou renseignez la référence bancaire / opérateur avant confirmation.");
+          }
+          if (!confirmedBy) throw new Error("Indiquez la personne qui a vérifié le paiement fournisseur.");
+        }
         if (transactionType === "supplier_payment" && purchaseOrderId) {
           const payload = req.payload as any;
           const purchaseOrder = await payload.findByID({
