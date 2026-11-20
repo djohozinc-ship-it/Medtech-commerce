@@ -32,6 +32,7 @@ export const ProductForm = ({
 }) => {
   const medtechProduct = product as Product & { salesMode?: string | null };
   const isQuoteOnly = medtechProduct.salesMode === "quote";
+  const quantityLimit = isQuoteOnly ? 999 : maxQuantity;
   const [quantity, setQuantity] = useState(1);
   const { updateCart, cart } = useCart();
 
@@ -48,7 +49,7 @@ export const ProductForm = ({
     setQuantity((prev) => {
       const newQty = prev + delta;
       // Clamp the quantity between min and max
-      return Math.min(Math.max(newQty, minQuantity), maxQuantity);
+      return Math.min(Math.max(newQty, minQuantity), quantityLimit);
     });
   };
 
@@ -228,7 +229,7 @@ export const ProductForm = ({
 
         <div className="flex">
           <QuantityInput
-            maxQuantity={maxQuantity}
+            maxQuantity={quantityLimit}
             minQuantity={minQuantity}
             setQuantity={setQuantity}
             updateQuantity={updateQuantity}
