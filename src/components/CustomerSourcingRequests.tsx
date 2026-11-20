@@ -89,9 +89,13 @@ export function CustomerSourcingRequests() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ requestId, action }),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result?.message || "La réponse n'a pas pu être enregistrée.");
-      if (action === "accept" && result.orderId) {
+      const result: unknown = await response.json();
+      const apiMessage = typeof result === "object" && result !== null && "message" in result && typeof result.message === "string"
+        ? result.message
+        : "La réponse n'a pas pu être enregistrée.";
+      if (!response.ok) throw new Error(apiMessage);
+      const orderId = typeof result === "object" && result !== null && "orderId" in result ? result.orderId : undefined;
+      if (action === "accept" && orderId) {
         setMessage("Devis accepté : ta commande a été créée.");
       } else {
         setMessage("Ta réponse a bien été enregistrée.");
