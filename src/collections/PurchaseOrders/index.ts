@@ -193,7 +193,7 @@ export const PurchaseOrders: CollectionConfig = {
             collection: "purchase-orders",
             id: doc.id,
             overrideAccess: true,
-            data: { supplierEmailError: message },
+            data: { supplierEmailError: message, resendSupplierEmail: false },
           });
         }
         return doc;
