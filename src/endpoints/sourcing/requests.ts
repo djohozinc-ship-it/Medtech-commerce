@@ -134,7 +134,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
     if (expiryDate) expiryDate.setUTCHours(23, 59, 59, 999);
     const expiry = expiryDate?.getTime();
     if (expiry && (!Number.isFinite(expiry) || expiry < Date.now())) {
-      await req.payload.update({
+      await payload.update({
         collection: "sourcing-requests",
         id: requestId,
         overrideAccess: true,
@@ -145,7 +145,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
     }
 
     if (action === "decline") {
-      await req.payload.update({
+      await payload.update({
         collection: "sourcing-requests",
         id: requestId,
         overrideAccess: true,
@@ -171,7 +171,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
     }
 
     // Claim the quote before creating the order to block concurrent double acceptance.
-    const claim = await req.payload.update({
+    const claim = await payload.update({
       collection: "sourcing-requests",
       where: {
         and: [
@@ -188,14 +188,14 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
     }
 
     try {
-      const existingOrder = await req.payload.find({
+      const existingOrder = await payload.find({
         collection: "orders",
         where: { sourcingRequest: { equals: requestId } },
         limit: 1,
         overrideAccess: true,
       });
       if (existingOrder.docs[0]) {
-        await req.payload.update({
+        await payload.update({
           collection: "sourcing-requests",
           id: requestId,
           overrideAccess: true,
@@ -240,7 +240,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
         } as never,
       });
 
-      await req.payload.update({
+      await payload.update({
         collection: "sourcing-requests",
         id: requestId,
         overrideAccess: true,
@@ -250,14 +250,14 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
 
       return Response.json({ status: "converted_to_order", orderId: order.id }, { status: 201 });
     } catch (error) {
-      const createdOrder = await req.payload.find({
+      const createdOrder = await payload.find({
         collection: "orders",
         where: { sourcingRequest: { equals: requestId } },
         limit: 1,
         overrideAccess: true,
       });
       if (createdOrder.docs[0]) {
-        await req.payload.update({
+        await payload.update({
           collection: "sourcing-requests",
           id: requestId,
           overrideAccess: true,
@@ -266,7 +266,7 @@ export const respondToSourcingQuote = async (req: PayloadRequest) => {
         });
         return Response.json({ status: "converted_to_order", orderId: createdOrder.docs[0].id }, { status: 201 });
       }
-      await req.payload.update({
+      await payload.update({
         collection: "sourcing-requests",
         id: requestId,
         overrideAccess: true,
