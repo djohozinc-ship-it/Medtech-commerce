@@ -65,7 +65,7 @@ export function SourcingRequestForm() {
       setState("sending");
       const requestBody = {
         customerName,
-        customerEmail,
+        customerEmail: customerEmail.toLowerCase(),
         customerPhone,
         productName,
         brand: String(data.get("brand") || ""),
