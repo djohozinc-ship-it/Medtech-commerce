@@ -78,7 +78,7 @@ export const CustomerShipmentTracking = ({ orderId }: { orderId: string }) => {
               <span className="absolute -left-[5px] top-1 size-2 rounded-full bg-indigo-600" />
               <p className="font-medium text-gray-900">{labels[event.status] ?? event.status}</p>
               <p className="mt-1 text-xs text-gray-500">{dateLabel(event.eventDate)}</p>
-              {(event.location || event.carrier) && (
+              {(event.location ?? event.carrier) && (
                 <p className="mt-1 text-sm text-gray-600">
                   {[event.location, event.carrier].filter(Boolean).join(" · ")}
                 </p>
