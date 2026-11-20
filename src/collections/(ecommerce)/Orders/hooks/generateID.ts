@@ -12,6 +12,7 @@ export const generateID: CollectionBeforeValidateHook<Order> = async ({ data }) 
     while (!uniqueFound && attempts < 5) {
       const lastOrder = await payload.find({
         collection: "orders",
+        overrideAccess: true,
         sort: "-id",
         limit: 1,
       });
@@ -21,6 +22,7 @@ export const generateID: CollectionBeforeValidateHook<Order> = async ({ data }) 
 
       const existing = await payload.find({
         collection: "orders",
+        overrideAccess: true,
         where: {
           id: { equals: newID },
         },
