@@ -269,12 +269,12 @@ export const SourcingRequests: CollectionConfig = {
   ],
   hooks: {
     beforeValidate: [
-      ({ data, req }) => {
+      ({ data, req, originalDoc }) => {
         if (!data) return data;
 
         // Les visiteurs peuvent soumettre une demande, mais jamais modifier
         // son statut, le devis ou les notes réservées à l'administration.
-        const isAdmin = req.user?.collection === "administrators";
+        const isAdmin = req.user?.collection === "administrators" || req.context?.sourcingWorkflow === true;
         if (!isAdmin) {
           data.status = "received";
           delete data.quotedAmount;
@@ -292,16 +292,18 @@ export const SourcingRequests: CollectionConfig = {
           delete data.quotedTotal;
           delete data.quoteConditions;
         } else {
-          if (typeof data.quotedAmount === "number" && typeof data.quotedShippingCost === "number") {
-            data.quotedTotal = data.quotedAmount + data.quotedShippingCost;
-          } else if (typeof data.quotedAmount === "number") {
-            data.quotedTotal = data.quotedAmount;
+          const amount = data.quotedAmount ?? originalDoc?.quotedAmount;
+          const shipping = data.quotedShippingCost ?? originalDoc?.quotedShippingCost ?? 0;
+          const status = data.status ?? originalDoc?.status;
+          const validUntil = data.quoteValidUntil ?? originalDoc?.quoteValidUntil;
+          if (typeof amount === "number" && typeof shipping === "number") {
+            data.quotedTotal = amount + shipping;
           }
-          if (data.status === "quote_sent") {
-            if (typeof data.quotedAmount !== "number" || data.quotedAmount <= 0) {
+          if (status === "quote_sent") {
+            if (typeof amount !== "number" || amount <= 0) {
               throw new Error("Renseignez un montant de devis positif avant de l'envoyer.");
             }
-            if (data.quoteValidUntil && new Date(data.quoteValidUntil).getTime() < Date.now()) {
+            if (validUntil && new Date(validUntil).getTime() < Date.now()) {
               throw new Error("La date de validité du devis doit être future.");
             }
           }
