@@ -48,8 +48,8 @@ const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
     [t("brand"), product.brand],
     [t("model-reference"), product.modelReference],
     [t("origin-country"), product.originCountry],
-    [t("warranty"), hasValue(product.warrantyMonths) ? `${product.warrantyMonths} months` : null],
-    [t("lead-time"), hasValue(product.leadTimeDays) ? `${product.leadTimeDays} days` : null],
+    [t("warranty"), hasValue(product.warrantyMonths) ? `${product.warrantyMonths} ${t("month-unit")}` : null],
+    [t("lead-time"), hasValue(product.leadTimeDays) ? `${product.leadTimeDays} ${t("day-unit")}` : null],
     [t("availability"), product.availabilityMode === "in_stock" ? t("in-stock-confirm") : product.availabilityMode === "on_order" ? t("on-order") : product.availabilityMode === "to_confirm" ? t("to-confirm") : null],
   ].filter((row): row is [string, string | number] => hasValue(row[1]));
 
@@ -106,7 +106,7 @@ const TechnicalSheet = ({ product }: { product: MedtechProduct }) => {
                   rel="noreferrer"
                   className="text-sm font-medium text-main-700 underline underline-offset-2"
                 >
-                  {document.alt || document.filename || `Technical document ${index + 1}`}
+                  {document.alt || document.filename || `${t("document-label")} ${index + 1}`}
                 </a>
                 {document.mimeType === "application/pdf" && <span className="ml-2 text-xs text-gray-500">PDF</span>}
               </li>
