@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
+import { useState, type FormEvent } from "react";
 
 const MAX_FILES = 4;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
