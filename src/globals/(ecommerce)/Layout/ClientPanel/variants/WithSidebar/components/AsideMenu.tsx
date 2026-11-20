@@ -2,6 +2,7 @@
 import {
   AdjustmentsHorizontalIcon,
   ClipboardDocumentCheckIcon,
+  DocumentTextIcon,
   CubeIcon,
   QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
@@ -13,6 +14,7 @@ import { cn } from "@/utilities/cn";
 
 const navigation = [
   { name: "orders", href: "/account/orders", icon: CubeIcon },
+  { name: "sourcing", href: "/account/sourcing", icon: DocumentTextIcon },
   { name: "settings", href: "/account/settings", icon: AdjustmentsHorizontalIcon },
   { name: "orders-data", href: "/account/orders-data", icon: ClipboardDocumentCheckIcon },
   { name: "help", href: "/account/help", icon: QuestionMarkCircleIcon },
