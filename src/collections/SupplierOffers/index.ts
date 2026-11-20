@@ -69,5 +69,27 @@ export const SupplierOffers: CollectionConfig = {
     { name: "internalNotes", type: "textarea", label: "Notes internes" },
     { name: "supportingDocuments", type: "relationship", relationTo: "media", hasMany: true, label: "Pro forma, fiches techniques et documents" },
   ],
+  hooks: {
+    beforeValidate: [
+      async ({ data, originalDoc, req }) => {
+        if (!data) return data;
+        const supplierValue = data.supplier ?? originalDoc?.supplier;
+        const supplierId = typeof supplierValue === "object" && supplierValue ? supplierValue.id : supplierValue;
+        const status = data.quoteStatus ?? originalDoc?.quoteStatus;
+        const price = typeof data.unitPrice === "number" ? data.unitPrice : originalDoc?.unitPrice;
+        const moq = typeof data.minimumOrderQuantity === "number" ? data.minimumOrderQuantity : originalDoc?.minimumOrderQuantity;
+        const validity = data.validUntil ?? originalDoc?.validUntil;
+        if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) throw new Error("Le prix unitaire fournisseur doit être supérieur à zéro.");
+        if (typeof moq === "number" && (!Number.isInteger(moq) || moq < 1)) throw new Error("La quantité minimale fournisseur doit être un entier supérieur ou égal à 1.");
+        if (status === "approved") {
+          if (!supplierId) throw new Error("Sélectionnez un fournisseur avant de valider son offre.");
+          const supplier = await (req.payload as any).findByID({ collection: "suppliers", id: supplierId, depth: 0, overrideAccess: true });
+          if (!supplier || supplier.verificationStatus !== "verified") throw new Error("Le fournisseur doit être vérifié avant de valider son offre commerciale.");
+          if (validity && new Date(validity).getTime() < Date.now()) throw new Error("Cette offre fournisseur est expirée.");
+        }
+        return data;
+      },
+    ],
+  },
   timestamps: true,
 };
