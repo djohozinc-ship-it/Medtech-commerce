@@ -86,11 +86,15 @@ const OrdersPage = async ({ params }: { params: Promise<{ locale: Locale; id: st
                 <div className="flex flex-auto flex-col">
                   <div>
                     <h4 className="font-medium text-gray-900">
-                      <Link
-                        href={`/product/${product.slug}${product.variants && selectedVariant && `?variant=${selectedVariant.variantSlug}`}`}
-                      >
-                        {product.title}
-                      </Link>
+                      {product.slug ? (
+                        <Link
+                          href={`/product/${product.slug}${product.variants && selectedVariant && `?variant=${selectedVariant.variantSlug}`}`}
+                        >
+                          {product.title}
+                        </Link>
+                      ) : (
+                        <span>{product.title}</span>
+                      )}
                     </h4>
                     <p className="mt-2 text-sm text-gray-500">
                       {product.colors?.find((color) => color.slug === selectedVariant?.color)?.label}
