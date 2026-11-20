@@ -132,5 +132,11 @@
   },
   "eslintConfig": {
     "root": true
+  },
+  "pnpm": {
+    "overrides": {
+      "fast-xml-parser": "^5.5.6",
+      "mongoose": "^8.24.7"
+    }
   }
 }
