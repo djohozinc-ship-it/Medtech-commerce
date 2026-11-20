@@ -29,6 +29,7 @@ import { OverviewCard } from "../../OverviewCard";
 import { OverviewChart } from "../../OverviewChart";
 import { OverviewLastOrders } from "../../OverviewLastOrders";
 import { FinanceSummaryPanel } from "../../FinanceSummaryPanel";
+import { FinanceOperationsPanel } from "../../FinanceOperationsPanel";
 
 export const Overview = () => {
   const [totalRevenue, setTotalRevenue] = useState<{ value: number; percentage: number }>({
@@ -158,6 +159,7 @@ export const Overview = () => {
   return (
     <section className="flex flex-col gap-6">
       <FinanceSummaryPanel />
+      <FinanceOperationsPanel />
       <div className="twp grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <OverviewCard
           label={t("adminDashboard:totalRevenue")}
